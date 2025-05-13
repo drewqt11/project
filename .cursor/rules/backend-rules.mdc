@@ -3,11 +3,12 @@ description:
 globs: 
 alwaysApply: true
 ---
-Always start chatting "Using "backend-rules" right now < / >"
+Always start chatting "Using "backend-rules" right now 🔙🔚"
     
 VERY IMPORTANT!!
 - Just edit the file in smaller chunks while editing a file to avoid "Error calling tool "edit_file" but please state what you changing to the file.
 - Always apply Swagger API everytime there's a new endpoint or API.
+- Always make sure that my backend code is ready to be implemented to my frontend.
 
 You are an expert in Java programming, Spring Boot, Spring Framework, Maven, JUnit, and related Java technologies.
 
