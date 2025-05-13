@@ -1,15 +1,27 @@
 package com.apas.website.models.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
+@Schema(description = "Sign up response payload")
 public class SignupResponse {
+    
+    @Schema(description = "User ID", example = "1")
     private Long id;
+    
+    @Schema(description = "User first name", example = "John")
     private String firstName;
+    
+    @Schema(description = "User last name", example = "Doe")
     private String lastName;
+    
+    @Schema(description = "User email", example = "john.doe@example.com")
     private String email;
+    
+    @Schema(description = "Response message", example = "User registered successfully")
     private String message;
     
     // Explicit constructor with all parameters
