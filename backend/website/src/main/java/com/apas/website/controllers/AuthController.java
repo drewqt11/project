@@ -1,10 +1,10 @@
 package com.apas.website.controllers;
 
-import com.apas.website.models.User;
-import com.apas.website.models.request.LoginRequest;
-import com.apas.website.models.request.SignupRequest;
-import com.apas.website.models.response.JwtResponse;
-import com.apas.website.models.response.SignupResponse;
+import com.apas.website.entities.UserEntity;
+import com.apas.website.entities.models.request.LoginRequest;
+import com.apas.website.entities.models.request.SignupRequest;
+import com.apas.website.entities.models.response.JwtResponse;
+import com.apas.website.entities.models.response.SignupResponse;
 import com.apas.website.repositories.UserRepository;
 import com.apas.website.security.JwtUtils;
 import com.apas.website.services.UserService;
@@ -61,7 +61,7 @@ public class AuthController {
         String jwt = jwtUtils.generateToken(userDetails);
         String refreshToken = jwtUtils.generateRefreshToken(userDetails);
         
-        User user = userRepository.findByEmail(userDetails.getUsername())
+        UserEntity user = userRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + userDetails.getUsername()));
         
         return ResponseEntity.ok(new JwtResponse(

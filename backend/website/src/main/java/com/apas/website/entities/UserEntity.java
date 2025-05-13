@@ -1,4 +1,4 @@
-package com.apas.website.models;
+package com.apas.website.entities;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
         @UniqueConstraint(columnNames = "email")
 })
 @Schema(description = "User entity")
-public class User {
+public class UserEntity {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

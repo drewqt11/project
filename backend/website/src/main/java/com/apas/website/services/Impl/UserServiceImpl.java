@@ -1,8 +1,8 @@
 package com.apas.website.services.Impl;
 
-import com.apas.website.models.request.SignupRequest;
-import com.apas.website.models.response.SignupResponse;
-import com.apas.website.models.User;
+import com.apas.website.entities.UserEntity;
+import com.apas.website.entities.models.request.SignupRequest;
+import com.apas.website.entities.models.response.SignupResponse;
 import com.apas.website.repositories.UserRepository;
 import com.apas.website.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,14 +30,14 @@ public class UserServiceImpl implements UserService {
         }
 
         // Create new user
-        User user = new User();
+        UserEntity user = new UserEntity();
         user.setFirstName(signupRequest.getFirstName());
         user.setLastName(signupRequest.getLastName());
         user.setEmail(signupRequest.getEmail());
         user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
 
         // Save user
-        User savedUser = userRepository.save(user);
+        UserEntity savedUser = userRepository.save(user);
 
         // Return response
         return new SignupResponse(
