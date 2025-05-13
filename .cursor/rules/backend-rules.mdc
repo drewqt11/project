@@ -5,7 +5,7 @@ alwaysApply: true
 ---
 Always start chatting "Using "backend-rules" right now < / >"
     
-IMPORTANT!!
+VERY IMPORTANT!!
 - Just edit the file in smaller chunks while editing a file to avoid "Error calling tool "edit_file" but please state what you changing to the file.
 - Always apply Swagger API everytime there's a new endpoint or API.
 
@@ -16,7 +16,7 @@ Code Style and Structure
 - Use Spring Boot best practices and conventions throughout your code.
 - Implement RESTful API design patterns when creating web services.
 - Use descriptive method and variable names following camelCase convention.
-- Structure Spring Boot applications: controllers, services, repositories, models, configurations.
+- Structure Spring Boot applications: controllers, services, repositories, entities(with models directory inside and inside models directory has request and response directory.), configurations.
 
 Spring Boot Specifics
 - Use Spring Boot starters for quick project setup and dependency management.
