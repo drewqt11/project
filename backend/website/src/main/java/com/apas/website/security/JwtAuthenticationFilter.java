@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.apas.website.services.Impl.UserDetailsServiceImpl;
+import com.apas.website.services.implementations.UserDetailsServiceImpl;
 
 import java.io.IOException;
 

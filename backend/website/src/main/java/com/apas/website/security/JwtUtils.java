@@ -1,10 +1,12 @@
 package com.apas.website.security;
 
+import com.apas.website.services.AuthService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -15,6 +17,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import javax.crypto.SecretKey;
 
 @Component
 public class JwtUtils {
@@ -29,10 +32,34 @@ public class JwtUtils {
     
     @Value("${jwt.refreshExpiration:604800000}") // 7 days by default
     private int refreshTokenExpirationMs;
+
+    private AuthService authService;
+    
+    // Store the generated key as a static field to avoid regenerating it on each request
+    private static SecretKey generatedKey;
+    
+    @Autowired
+    public void setAuthService(AuthService authService) {
+        this.authService = authService;
+    }
     
     private Key getSigningKey() {
-        byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
-        return Keys.hmacShaKeyFor(keyBytes);
+        // If we already generated a key, return it
+        if (generatedKey != null) {
+            return generatedKey;
+        }
+        
+        try {
+            // Try to use the configured secret if it's strong enough
+            byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+            generatedKey = Keys.hmacShaKeyFor(keyBytes);
+            return generatedKey;
+        } catch (Exception e) {
+            logger.warn("Provided JWT secret is not strong enough for HS512. Generating a secure key instead.");
+            // Generate a secure key for HS512 as recommended by the error message
+            generatedKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+            return generatedKey;
+        }
     }
     
     public String extractUsername(String token) {
@@ -68,7 +95,20 @@ public class JwtUtils {
     
     public String generateRefreshToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-        return createRefreshToken(claims, userDetails.getUsername());
+        String refreshToken = createRefreshToken(claims, userDetails.getUsername());
+        
+        try {
+            String username = userDetails.getUsername();
+            
+            // Save refresh token to database if authService is available
+            if (authService != null) {
+                authService.saveRefreshTokenByEmail(username, refreshToken);
+            }
+        } catch (Exception e) {
+            logger.error("Failed to persist refresh token: {}", e.getMessage());
+        }
+        
+        return refreshToken;
     }
     
     private String createToken(Map<String, Object> claims, String subject) {

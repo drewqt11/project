@@ -4,15 +4,18 @@ import com.apas.website.entities.UserEntity;
 import com.apas.website.entities.models.request.LoginRequest;
 import com.apas.website.entities.models.request.SignupRequest;
 import com.apas.website.entities.models.response.SignupResponse;
+import com.apas.website.entities.models.response.UserProfileResponse;
 import com.apas.website.repositories.UserRepository;
 import com.apas.website.security.JwtResponse;
 import com.apas.website.security.JwtUtils;
+import com.apas.website.services.AuthService;
 import com.apas.website.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +28,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*", maxAge = 3600)
 @Tag(name = "Authentication", description = "Authentication management APIs including traditional login and Google OAuth2 authentication")
 public class AuthController {
 
@@ -35,17 +40,19 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final UserRepository userRepository;
+    private final AuthService authService;
     
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String googleClientId;
 
     @Autowired
     public AuthController(UserService userService, AuthenticationManager authenticationManager, 
-                          JwtUtils jwtUtils, UserRepository userRepository) {
+                          JwtUtils jwtUtils, UserRepository userRepository, AuthService authService) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
         this.userRepository = userRepository;
+        this.authService = authService;
     }
 
     @Operation(summary = "User login", description = "Authenticates a user and returns JWT tokens")
@@ -95,22 +102,63 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
     
-    @Operation(summary = "Get Google OAuth2 login URL", description = "Returns the URL for Google OAuth2 login")
+    @Operation(
+        summary = "User logout", 
+        description = "Logs out a user by revoking all their refresh tokens",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Google OAuth2 URL returned successfully")
+        @ApiResponse(responseCode = "200", description = "Successfully logged out"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
-    @GetMapping("/google-login-url")
-    public ResponseEntity<String> getGoogleLoginUrl() {
-        String redirectUri = "http://localhost:8080/login/oauth2/code/google";
-        String scope = "email profile";
+    @PostMapping("/logout")
+    public ResponseEntity<?> logoutUser() {
+        // Get the authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         
-        String googleLoginUrl = "https://accounts.google.com/o/oauth2/v2/auth" +
-                "?client_id=" + googleClientId +
-                "&redirect_uri=" + redirectUri +
-                "&response_type=code" +
-                "&scope=" + scope +
-                "&access_type=offline";
+        // Find the user by email
+        UserEntity user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + userDetails.getUsername()));
         
-        return ResponseEntity.ok(googleLoginUrl);
+        // Logout by revoking all refresh tokens
+        authService.logout(user.getUserId());
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Logged out successfully");
+        
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+        summary = "Get user profile", 
+        description = "Retrieves the profile details of the currently authenticated user",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Profile retrieved successfully", 
+                     content = @Content(schema = @Schema(implementation = UserProfileResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    @GetMapping("/profile")
+    public ResponseEntity<UserProfileResponse> getUserProfile() {
+        // Get the authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        
+        // Find the user by email
+        UserEntity user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + userDetails.getUsername()));
+        
+        // Create and return the profile response
+        UserProfileResponse profileResponse = new UserProfileResponse(
+                user.getUserId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getEmail(),
+                user.getIsOAuth2User()
+        );
+        
+        return ResponseEntity.ok(profileResponse);
     }
 } 

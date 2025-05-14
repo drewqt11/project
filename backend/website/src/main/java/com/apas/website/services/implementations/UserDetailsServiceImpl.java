@@ -1,4 +1,4 @@
-package com.apas.website.services.Impl;
+package com.apas.website.services.implementations;
 
 import com.apas.website.entities.UserEntity;
 import com.apas.website.repositories.UserRepository;
