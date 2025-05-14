@@ -3,9 +3,9 @@ package com.apas.website.controllers;
 import com.apas.website.entities.UserEntity;
 import com.apas.website.entities.models.request.LoginRequest;
 import com.apas.website.entities.models.request.SignupRequest;
-import com.apas.website.entities.models.response.JwtResponse;
 import com.apas.website.entities.models.response.SignupResponse;
 import com.apas.website.repositories.UserRepository;
+import com.apas.website.security.JwtResponse;
 import com.apas.website.security.JwtUtils;
 import com.apas.website.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,13 +28,16 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*", maxAge = 3600)
-@Tag(name = "Authentication", description = "Authentication management APIs")
+@Tag(name = "Authentication", description = "Authentication management APIs including traditional login and Google OAuth2 authentication")
 public class AuthController {
 
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final UserRepository userRepository;
+    
+    @Value("${spring.security.oauth2.client.registration.google.client-id}")
+    private String googleClientId;
 
     @Autowired
     public AuthController(UserService userService, AuthenticationManager authenticationManager, 
@@ -67,7 +71,7 @@ public class AuthController {
         return ResponseEntity.ok(new JwtResponse(
                 jwt,
                 refreshToken,
-                user.getId(),
+                user.getUserId(),
                 user.getFirstName(),
                 user.getLastName(),
                 user.getEmail()
@@ -89,5 +93,24 @@ public class AuthController {
         }
         
         return ResponseEntity.ok(response);
+    }
+    
+    @Operation(summary = "Get Google OAuth2 login URL", description = "Returns the URL for Google OAuth2 login")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Google OAuth2 URL returned successfully")
+    })
+    @GetMapping("/google-login-url")
+    public ResponseEntity<String> getGoogleLoginUrl() {
+        String redirectUri = "http://localhost:8080/login/oauth2/code/google";
+        String scope = "email profile";
+        
+        String googleLoginUrl = "https://accounts.google.com/o/oauth2/v2/auth" +
+                "?client_id=" + googleClientId +
+                "&redirect_uri=" + redirectUri +
+                "&response_type=code" +
+                "&scope=" + scope +
+                "&access_type=offline";
+        
+        return ResponseEntity.ok(googleLoginUrl);
     }
 } 

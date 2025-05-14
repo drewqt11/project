@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @Schema(description = "Sign up response payload")
 public class SignupResponse {
     
-    @Schema(description = "User ID", example = "1")
-    private Long id;
+    @Schema(description = "User ID", example = "USER-A0DR-2DA3")
+    private String userId;
     
     @Schema(description = "User first name", example = "John")
     private String firstName;
@@ -25,8 +25,8 @@ public class SignupResponse {
     private String message;
     
     // Explicit constructor with all parameters
-    public SignupResponse(Long id, String firstName, String lastName, String email, String message) {
-        this.id = id;
+    public SignupResponse(String userId, String firstName, String lastName, String email, String message) {
+        this.userId = userId;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
@@ -39,8 +39,8 @@ public class SignupResponse {
     }
     
     // Additional getters
-    public Long getId() {
-        return id;
+    public String getUserId() {
+        return userId;
     }
     
     public String getFirstName() {

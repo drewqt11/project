@@ -28,6 +28,12 @@ public class UserServiceImpl implements UserService {
             return new SignupResponse(null, null, null, null, 
                 "Email already in use!");
         }
+        
+        // Validate password length for normal users
+        if (signupRequest.getPassword() == null || signupRequest.getPassword().length() < 8) {
+            return new SignupResponse(null, null, null, null, 
+                "Password must be at least 8 characters long");
+        }
 
         // Create new user
         UserEntity user = new UserEntity();
@@ -35,13 +41,14 @@ public class UserServiceImpl implements UserService {
         user.setLastName(signupRequest.getLastName());
         user.setEmail(signupRequest.getEmail());
         user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
+        user.setIsOAuth2User(false); // This is a normal user registration
 
         // Save user
         UserEntity savedUser = userRepository.save(user);
 
         // Return response
         return new SignupResponse(
-            savedUser.getId(),
+            savedUser.getUserId(),
             savedUser.getFirstName(),
             savedUser.getLastName(),
             savedUser.getEmail(),

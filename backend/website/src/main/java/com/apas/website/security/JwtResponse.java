@@ -1,4 +1,4 @@
-package com.apas.website.entities.models.response;
+package com.apas.website.security;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -20,8 +20,8 @@ public class JwtResponse {
     @Schema(description = "Token type", example = "Bearer")
     private String type = "Bearer";
     
-    @Schema(description = "User ID", example = "1")
-    private Long id;
+    @Schema(description = "User ID", example = "USER-A0DR-2DA3")
+    private String userId;
     
     @Schema(description = "User first name", example = "John")
     private String firstName;
@@ -32,10 +32,10 @@ public class JwtResponse {
     @Schema(description = "User email", example = "john.doe@example.com")
     private String email;
     
-    public JwtResponse(String token, String refreshToken, Long id, String firstName, String lastName, String email) {
+    public JwtResponse(String token, String refreshToken, String userId, String firstName, String lastName, String email) {
         this.token = token;
         this.refreshToken = refreshToken;
-        this.id = id;
+        this.userId = userId;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
