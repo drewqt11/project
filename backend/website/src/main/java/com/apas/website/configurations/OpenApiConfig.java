@@ -39,7 +39,8 @@ public class OpenApiConfig {
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .tags(List.of(
                         new Tag().name("Authentication").description("Authentication management APIs"),
-                        new Tag().name("Portfolio Management").description("APIs for managing user portfolios")
+                        new Tag().name("Portfolio Management").description("APIs for managing user portfolios"),
+                        new Tag().name("PDF Generation").description("APIs for generating and downloading portfolio PDFs")
                 ));
     }
     
@@ -67,6 +68,15 @@ public class OpenApiConfig {
                 .group("all-apis")
                 .displayName("All APIs")
                 .pathsToMatch("/api/**")
+                .build();
+    }
+    
+    @Bean
+    public GroupedOpenApi pdfApi() {
+        return GroupedOpenApi.builder()
+                .group("pdf-generation")
+                .displayName("PDF Generation APIs")
+                .pathsToMatch("/api/portfolios/*/generate-pdf", "/api/portfolios/*/download-pdf")
                 .build();
     }
 } 
