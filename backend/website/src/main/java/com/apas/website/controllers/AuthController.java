@@ -3,6 +3,7 @@ package com.apas.website.controllers;
 import com.apas.website.entities.UserEntity;
 import com.apas.website.entities.models.request.LoginRequest;
 import com.apas.website.entities.models.request.SignupRequest;
+import com.apas.website.entities.models.request.UpdateProfileRequest;
 import com.apas.website.entities.models.response.SignupResponse;
 import com.apas.website.entities.models.response.UserProfileResponse;
 import com.apas.website.repositories.UserRepository;
@@ -157,6 +158,51 @@ public class AuthController {
                 user.getLastName(),
                 user.getEmail(),
                 user.getIsOAuth2User()
+        );
+        
+        return ResponseEntity.ok(profileResponse);
+    }
+
+    @Operation(
+        summary = "Update user profile", 
+        description = "Updates the profile details of the currently authenticated user",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Profile updated successfully", 
+                     content = @Content(schema = @Schema(implementation = UserProfileResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
+    @PutMapping("/profile")
+    public ResponseEntity<UserProfileResponse> updateUserProfile(@Valid @RequestBody UpdateProfileRequest profileRequest) {
+        // Get the authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        
+        // Find the user by email
+        UserEntity user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + userDetails.getUsername()));
+        
+        // Update user information
+        if (profileRequest.getFirstName() != null) {
+            user.setFirstName(profileRequest.getFirstName());
+        }
+        
+        if (profileRequest.getLastName() != null) {
+            user.setLastName(profileRequest.getLastName());
+        }
+        
+        // Save the updated user
+        UserEntity updatedUser = userRepository.save(user);
+        
+        // Create and return the profile response
+        UserProfileResponse profileResponse = new UserProfileResponse(
+                updatedUser.getUserId(),
+                updatedUser.getFirstName(),
+                updatedUser.getLastName(),
+                updatedUser.getEmail(),
+                updatedUser.getIsOAuth2User()
         );
         
         return ResponseEntity.ok(profileResponse);

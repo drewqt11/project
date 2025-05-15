@@ -51,7 +51,7 @@ public class JwtUtils {
         
         try {
             // Try to use the configured secret if it's strong enough
-            byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+        byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
             generatedKey = Keys.hmacShaKeyFor(keyBytes);
             return generatedKey;
         } catch (Exception e) {

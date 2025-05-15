@@ -1,5 +1,6 @@
 package com.apas.website.entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -9,6 +10,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -49,6 +53,11 @@ public class UserEntity {
     @Schema(description = "Indicates if the user was registered via OAuth2", example = "false")
     private Boolean isOAuth2User = false;
     
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    @Schema(description = "User's portfolios")
+    private List<PortfolioEntity> portfolios = new ArrayList<>();
+    
     // Explicit getters to ensure they're available at compile time
     public String getUserId() {
         return userId;
@@ -72,5 +81,21 @@ public class UserEntity {
     
     public Boolean getIsOAuth2User() {
         return isOAuth2User;
+    }
+    
+    public List<PortfolioEntity> getPortfolios() {
+        return portfolios;
+    }
+    
+    // Helper method to add a portfolio
+    public void addPortfolio(PortfolioEntity portfolio) {
+        portfolios.add(portfolio);
+        portfolio.setUser(this);
+    }
+    
+    // Helper method to remove a portfolio
+    public void removePortfolio(PortfolioEntity portfolio) {
+        portfolios.remove(portfolio);
+        portfolio.setUser(null);
     }
 } 

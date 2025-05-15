@@ -8,6 +8,7 @@ import java.security.SecureRandom;
 public class CustomIdGenerator {
     
     private static final String USER_PREFIX = "USER";
+    private static final String PORTFOLIO_PREFIX = "PORT";
     private static final int FIRST_SECTION_LENGTH = 4;
     private static final int SECOND_SECTION_LENGTH = 4;
     private static final String SECTION_SEPARATOR = "-";
@@ -23,6 +24,21 @@ public class CustomIdGenerator {
     public static String generateUserId() {
         StringBuilder sb = new StringBuilder();
         sb.append(USER_PREFIX).append(SECTION_SEPARATOR);
+        sb.append(generateRandomString(FIRST_SECTION_LENGTH)).append(SECTION_SEPARATOR);
+        sb.append(generateRandomString(SECOND_SECTION_LENGTH));
+        
+        return sb.toString();
+    }
+    
+    /**
+     * Generates a portfolio ID in the format "PORT-XXXX-XXXX" 
+     * where X is a random alphanumeric character (0-9, A-Z).
+     * 
+     * @return A formatted portfolio ID string
+     */
+    public static String generatePortfolioId() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(PORTFOLIO_PREFIX).append(SECTION_SEPARATOR);
         sb.append(generateRandomString(FIRST_SECTION_LENGTH)).append(SECTION_SEPARATOR);
         sb.append(generateRandomString(SECOND_SECTION_LENGTH));
         
@@ -58,6 +74,25 @@ public class CustomIdGenerator {
         String[] parts = id.split(SECTION_SEPARATOR);
         return parts.length == 3 && 
                parts[0].equals(USER_PREFIX) && 
+               parts[1].length() == FIRST_SECTION_LENGTH && 
+               parts[2].length() == SECOND_SECTION_LENGTH;
+    }
+    
+    /**
+     * Validates if the given string matches the portfolio ID format.
+     * 
+     * @param id The ID to validate
+     * @return true if the ID matches the format, false otherwise
+     */
+    public static boolean isValidPortfolioIdFormat(String id) {
+        if (id == null || id.length() != PORTFOLIO_PREFIX.length() + 2 * SECTION_SEPARATOR.length() + 
+                FIRST_SECTION_LENGTH + SECOND_SECTION_LENGTH) {
+            return false;
+        }
+        
+        String[] parts = id.split(SECTION_SEPARATOR);
+        return parts.length == 3 && 
+               parts[0].equals(PORTFOLIO_PREFIX) && 
                parts[1].length() == FIRST_SECTION_LENGTH && 
                parts[2].length() == SECOND_SECTION_LENGTH;
     }
