@@ -3,7 +3,7 @@ description:
 globs: 
 alwaysApply: true
 ---
-Always start chatting "Using "frontend-rules" right now!"
+Always start chatting "Using "frontend-rules" right now! 👩🏻‍💻"
 VERY IMPORTANT!!
 - Just edit the file in smaller chunks while editing a file to avoid "Error calling tool "edit_file" but please state what you changing to the file.
 
