@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 Always start chatting "Using "backend-rules" right now 🔙🔚"
     
