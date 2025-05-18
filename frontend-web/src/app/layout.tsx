@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "FolioFlow - Create Professional PDF Portfolios",
   description: "FolioFlow is a web-based application designed to simplify the process of creating professional PDF portfolios.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
