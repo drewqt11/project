@@ -1,4 +1,8 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ArrowRight, Palette, ShieldCheck, ListChecks } from "lucide-react";
@@ -29,6 +33,30 @@ const featureDetails = [
 ];
 
 export default function LandingPage() {
+  const router = useRouter();
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token");
+      if (token) {
+        router.push("/dashboard");
+      } else {
+        setIsLoadingAuth(false);
+      }
+    } else {
+      setIsLoadingAuth(false);
+    }
+  }, [router]);
+
+  if (isLoadingAuth) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <p className="text-slate-600">Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-white text-[#4A0404] font-sans">
       {/* Navbar */}
@@ -84,7 +112,11 @@ export default function LandingPage() {
                     </Button>
                   </Link>
                   <Link href="#about" passHref>
-                    <Button size="lg" variant="outline" className="w-full sm:w-auto border-[#C89B3C] text-[#C89B3C] hover:bg-[#C89B3C]/10 hover:border-[#b88a2c] shadow-sm hover:shadow-md transition-all duration-300 px-8 py-3 text-base">
+                    <Button 
+                      size="lg" 
+                      variant="outline" 
+                      className="sm:w-auto border-slate-300 text-slate-800 hover:bg-slate-100 hover:border-slate-400 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:border-slate-500 shadow-sm hover:shadow-md transition-all duration-300 px-3.5 py-3 text-base rounded-lg"
+                    >
                       Learn More
                     </Button>
                   </Link>
@@ -92,7 +124,7 @@ export default function LandingPage() {
               </div>
               <div className="flex items-center justify-center">
                 <div className="w-full max-w-2xl rounded-lg overflow-hidden">
-                  <Image
+          <Image
                     src="/image2.png"
                     alt="FolioFlow Showcase"
                     width={640}
@@ -121,7 +153,7 @@ export default function LandingPage() {
               {featureDetails.map((feature) => (
                 <Card 
                   key={feature.id}
-                  className="bg-white border border-slate-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 text-center flex flex-col p-6"
+                  className="bg-white rounded-xl shadow-xl hover:shadow-2xl transition-shadow duration-200 group text-center flex flex-col p-6 border-none overflow-hidden"
                 >
                   <CardHeader className="flex flex-col items-center p-0 mb-4">
                     <div className="flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-br from-rose-50 to-red-100 mb-4">
@@ -164,7 +196,7 @@ export default function LandingPage() {
               &copy; {new Date().getFullYear()} FolioFlow. All rights reserved.
             </p>
           </div>
-        </footer>
+      </footer>
       </main>
     </div>
   );
