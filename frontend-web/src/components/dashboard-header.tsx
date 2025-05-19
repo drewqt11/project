@@ -130,15 +130,14 @@ export function DashboardHeader() {
           </Link>
         </div>
 
-        <div className="flex items-center gap-3 h-12 min-w-[220px] md:min-w-[250px] ml-8">
-
+        <div className="flex items-center justify-end gap-3 h-12 min-w-[220px] md:min-w-[250px] ml-auto">
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 className={cn(
                   "justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50",
-                  "flex items-center gap-2 md:gap-3 pl-6 pr-7 md:pl-7 md:pr-8 py-2 rounded-full transition-all duration-300 flex-shrink-0",
+                  "flex items-center gap-3 md:gap-4 pl-6 pr-8 md:pl-8 md:pr-10 py-5 rounded-full transition-all duration-300 flex-shrink-0",
                   "bg-white dark:bg-slate-900 shadow-sm",
                   "hover:bg-[#C89B3C]/20 dark:hover:bg-[#C89B3C]/40",
                   "active:bg-slate-200 dark:active:bg-slate-700",
@@ -147,7 +146,7 @@ export function DashboardHeader() {
                 )}
               >
                 <div className={cn(
-                  "h-7 w-7 md:h-9 md:w-9 rounded-full flex items-center justify-center text-white shadow-md flex-shrink-0",
+                  "h-8 w-8 md:h-10 md:w-10 rounded-full flex items-center justify-center text-white shadow-md flex-shrink-0",
                   "bg-gradient-to-r from-[#800000] to-[#a70000]",
                   "ring-2 ring-white dark:ring-blue-950"
                 )}>
@@ -166,11 +165,11 @@ export function DashboardHeader() {
                   <span className="font-medium text-xs md:text-sm text-slate-900 dark:text-slate-50 whitespace-nowrap">
                     {!userProfile ? "Loading..." : displayName}
                   </span>
-                  <span className="text-[10px] md:text-xs text-[#800000] dark:text-rose-400 whitespace-nowrap font-medium">
+                  <span className="text-[10px] md:text-xs text-[#800000] dark:text-rose-400 whitespace-nowrap font-medium mt-[-2px]">
                     User Account
                   </span>
                 </div>
-                <ChevronDown className="h-3 w-3 md:h-4 md:w-4 text-[#800000] dark:text-rose-400 ml-0 md:ml-1 flex-shrink-0" />
+                <ChevronDown className="h-4 w-4 md:h-5 md:w-5 text-[#800000] dark:text-rose-400 ml-0 md:ml-1 flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent 

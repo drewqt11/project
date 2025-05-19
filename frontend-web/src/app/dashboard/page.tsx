@@ -35,7 +35,28 @@ import {
   FolderOpen,
   Star,
   Briefcase, // Example for "My Portfolios" icon, consistent with landing
+  LineChart, // Added for chart icon
+  BarChart2, // Added for new portfolio trends icon
 } from "lucide-react";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  Area,
+} from "recharts";
+import { 
+  ChartContainer, 
+  ChartConfig, 
+  ChartTooltip as ShadcnChartTooltip, // Renaming to avoid conflict if you have a local ChartTooltip
+  ChartTooltipContent as ShadcnChartTooltipContent, 
+  ChartLegend as ShadcnChartLegend,
+  ChartLegendContent as ShadcnChartLegendContent,
+} from "@/components/ui/chart"; // Assuming chart.tsx is in ui
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Sample data for portfolios - replace with actual data fetching
 const portfolios = [
@@ -90,6 +111,75 @@ export default function DashboardPage() {
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null); // Add userProfile state
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // State for Portfolio Trends Chart
+  const [portfolioTimeRange, setPortfolioTimeRange] = useState("week");
+  const [portfolioChartLoading, setPortfolioChartLoading] = useState(true);
+  const [portfolioChartData, setPortfolioChartData] = useState<any[]>([]); // Define a proper type later
+
+  const portfolioChartConfig: ChartConfig = {
+    portfolios: {
+      label: "Portfolios Created",
+      color: "hsl(var(--chart-1))", // Using one of the predefined chart colors from shadcn
+      icon: Briefcase, // Or LineChart
+    },
+  };
+
+  // Effect to load/mock portfolio chart data based on time range
+  useEffect(() => {
+    const fetchData = async () => {
+      setPortfolioChartLoading(true);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      let mockData = [];
+      const endDate = new Date();
+      if (portfolioTimeRange === "week") {
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date(endDate);
+          date.setDate(endDate.getDate() - i);
+          mockData.push({ 
+            date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), 
+            portfolios: Math.floor(Math.random() * 5) + 1 
+          });
+        }
+      } else if (portfolioTimeRange === "month") {
+        for (let i = 3; i >= 0; i--) { // 4 weeks
+          const date = new Date(endDate);
+          date.setDate(endDate.getDate() - i * 7);
+          mockData.push({ 
+            date: `Week ${4-i}`,
+            portfolios: Math.floor(Math.random() * 10) + 5 
+          });
+        }
+      } else if (portfolioTimeRange === "quarter") {
+        const months = ["Month 1", "Month 2", "Month 3"];
+        for (let i = 0; i < 3; i++) {
+          mockData.push({ 
+            date: months[i],
+            portfolios: Math.floor(Math.random() * 20) + 10 
+          });
+        }
+      }
+      setPortfolioChartData(mockData);
+      setPortfolioChartLoading(false);
+    };
+    fetchData();
+  }, [portfolioTimeRange]);
+
+  // Custom Tooltip for the chart
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md shadow-lg">
+          <p className={`label text-sm font-medium ${primaryTextColor}`}>{`${label}`}</p>
+          <p className={`intro text-xs ${secondaryTextColor}`}>
+            {`Portfolios: ${payload[0].value}`}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -154,49 +244,147 @@ export default function DashboardPage() {
 
           {/* Quick navigation cards */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {/* My Portfolios Card - New Design from Image */}
-            <Card className="border-none shadow-xl overflow-hidden bg-white dark:bg-slate-800 rounded-xl hover:shadow-2xl transition-shadow duration-200 group">
+            
+            {/* Portfolio Trends Chart Card - New */}
+            <Card className="border-none shadow-xl overflow-hidden bg-white dark:bg-slate-800 rounded-xl md:col-span-2 lg:col-span-2"> {/* Span 2 columns for wider chart */}
+              
+              <CardHeader className="px-6 pt-6 pb-0">
+                <div className="flex flex-col md:flex-row justify-between md:items-center gap-2 md:gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`h-10 w-10 bg-gradient-to-br from-[#4a0001] to-[#c89b3c] rounded-full flex items-center justify-center shadow-md`}>
+                      <BarChart2 className="h-5 w-5 text-white" />
+                    </div>
+                    <CardTitle className={`text-xl font-bold ${primaryTextColor}`}>
+                      Portfolio Trends
+                    </CardTitle>
+                  </div>
+                  <Tabs value={portfolioTimeRange} onValueChange={setPortfolioTimeRange} className="w-full md:w-auto">
+                    <TabsList className="bg-slate-100 dark:bg-slate-700 p-1 rounded-full">
+                      <TabsTrigger
+                        value="week"
+                        className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800/80 data-[state=active]:shadow-sm rounded-full px-3 md:px-4 py-1 text-xs md:text-sm data-[state=active]:text-[${iconColor}] dark:data-[state=active]:text-white"
+                      >
+                        Week
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="month"
+                        className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800/80 data-[state=active]:shadow-sm rounded-full px-3 md:px-4 py-1 text-xs md:text-sm data-[state=active]:text-[${iconColor}] dark:data-[state=active]:text-white"
+                      >
+                        Month
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="quarter"
+                        className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800/80 data-[state=active]:shadow-sm rounded-full px-3 md:px-4 py-1 text-xs md:text-sm data-[state=active]:text-[${iconColor}] dark:data-[state=active]:text-white"
+                      >
+                        Quarter
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+              </CardHeader>
               <CardContent className="p-6">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className={`text-sm font-medium ${secondaryTextColor}`}>
-                      Portfolios Created
-                    </p>
-                    <h3 className={`text-3xl font-bold ${primaryTextColor} mt-1`}>
-                      {portfolios.length}
-                    </h3>
+                {portfolioChartLoading ? (
+                  <Skeleton className="h-[250px] md:h-[300px] w-full rounded-lg" />
+                ) : portfolioChartData.length > 0 ? (
+                  <div className="h-[250px] md:h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={portfolioChartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="portfolioGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={portfolioChartConfig.portfolios.color} stopOpacity={0.8} />
+                            <stop offset="95%" stopColor={portfolioChartConfig.portfolios.color} stopOpacity={0.1} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.7)" vertical={false} />
+                        <XAxis
+                          dataKey="date"
+                          stroke="hsl(var(--muted-foreground))"
+                          fontSize={12}
+                          tickLine={false}
+                          axisLine={{ stroke: "hsl(var(--border))" }}
+                        />
+                        <YAxis
+                          stroke="hsl(var(--muted-foreground))"
+                          fontSize={12}
+                          tickLine={false}
+                          axisLine={{ stroke: "hsl(var(--border))" }}
+                          allowDecimals={false}
+                          tickFormatter={(value) => `${value}`}
+                        />
+                        <ShadcnChartTooltip cursor={false} content={<CustomTooltip />} /> 
+                        <Area
+                          type="monotone"
+                          dataKey="portfolios"
+                          stroke={portfolioChartConfig.portfolios.color}
+                          fillOpacity={1}
+                          fill="url(#portfolioGradient)"
+                          strokeWidth={2}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
                   </div>
-                  <div className={`h-14 w-14 bg-rose-100 dark:bg-rose-900/40 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                    <Briefcase className={`h-7 w-7 ${iconColor}`} />
+                ) : (
+                  <div className="h-[250px] md:h-[300px] w-full flex items-center justify-center">
+                    <div className="text-center">
+                      <LineChart className={`h-12 w-12 ${secondaryTextColor} mx-auto mb-4`} />
+                      <h3 className={`text-lg font-medium ${primaryTextColor}`}>
+                        No portfolio data available
+                      </h3>
+                      <p className={`${secondaryTextColor} max-w-md text-sm`}>
+                        Portfolio creation trends will appear here once you create more portfolios.
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div className={`mt-4 pt-4 border-t border-slate-200 dark:border-slate-700`}>
-                  <p className={`text-xs ${secondaryTextColor}`}>
-                    Your central hub for managing all created portfolios.
-                  </p>
-                </div>
+                )}
               </CardContent>
             </Card>
-            {/* Date and Time Card - Updated Design */}
-            <div
-              className="w-full bg-white dark:bg-slate-800 backdrop-blur-sm rounded-xl p-6 text-center relative overflow-hidden shadow-xl hover:shadow-2xl transition-shadow duration-200 group border-none flex flex-col justify-center min-h-[140px]"
-              role="status"
-              aria-label={`Current time: ${currentTime.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`}
-            >
-              <div className={`absolute -top-6 -right-6 w-12 h-12 rounded-full bg-rose-500/10 dark:bg-rose-400/10`}></div>
-              <div className={`absolute -bottom-6 -left-6 w-12 h-12 rounded-full bg-amber-500/10 dark:bg-amber-400/10`}></div>
 
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <Calendar className={`h-5 w-5 ${iconAccentColor}`} aria-hidden="true" />
-                <p className={`text-base ${secondaryTextColor} font-medium`}>
-                  {currentTime.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
-                </p>
+            {/* Column for Date/Time and Total Portfolios */}
+            <div className="flex flex-col gap-4 flex-1">
+              {/* Date and Time Card - Updated Design */}
+              <div
+                className="w-full bg-white dark:bg-slate-800 backdrop-blur-sm rounded-xl p-6 text-center relative overflow-hidden shadow-xl hover:shadow-2xl transition-shadow duration-200 group border-none flex flex-col justify-center flex-1 min-h-[140px] md:self-start"
+                role="status"
+                aria-label={`Current time: ${currentTime.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`}
+              >
+                <div className={`absolute -top-6 -right-6 w-12 h-12 rounded-full bg-rose-500/10 dark:bg-rose-400/10`}></div>
+                <div className={`absolute -bottom-6 -left-6 w-12 h-12 rounded-full bg-amber-500/10 dark:bg-amber-400/10`}></div>
+
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <Calendar className={`h-5 w-5 ${iconAccentColor}`} aria-hidden="true" />
+                  <p className={`text-base ${secondaryTextColor} font-medium`}>
+                    {currentTime.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+                  </p>
+                </div>
+
+                <div className={`text-5xl font-mono font-bold ${primaryTextColor} relative`}>
+                  {currentTime.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </div>
               </div>
 
-              <div className={`text-5xl font-mono font-bold ${primaryTextColor} relative`}>
-                {currentTime.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-              </div>
-            </div>
+              {/* Total Portfolio Created Card - NEW */}
+              <Card className="border-none shadow-xl overflow-hidden bg-white dark:bg-slate-800 rounded-xl hover:shadow-2xl transition-shadow duration-200 group flex flex-col flex-1 min-h-[140px]">
+                
+                <CardContent className="p-6 flex flex-col flex-1 justify-center">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className={`text-sm font-medium ${secondaryTextColor}`}>Total Portfolios Created</p>
+                      <h3 className={`text-3xl font-bold ${primaryTextColor} mt-1`}>
+                        {portfolios.length}
+                      </h3>
+                    </div>
+                    <div className={`h-14 w-14 bg-[#4a0001]/10 dark:bg-[#4a0001]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                      <Briefcase className={`h-7 w-7 ${iconColor}`} />
+                    </div>
+                  </div>
+                  <div className={`mt-4 pt-4 border-t border-slate-100 dark:border-slate-700/50`}>
+                    <p className={`text-xs ${secondaryTextColor}`}>
+                      You currently have {portfolios.length} portfolio{portfolios.length === 1 ? "" : "s"}.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div> {/* End of wrapper for right column cards */}
           </div>
 
           {/* Dashboard tabs and search */}
