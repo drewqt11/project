@@ -37,7 +37,7 @@ import {
 import { cn } from "@/lib/utils";
 
 interface UserProfile {
-  id: string;
+  userId: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -63,7 +63,42 @@ export function DashboardHeader() {
     if (storedUser) {
       setUserProfile(storedUser);
     }
+
+    // Listen for localStorage changes from other tabs/windows or profile page updates
+    function handleStorageChange(event: StorageEvent) {
+      if (event.key === "user") {
+        const newStoredUser = getLocalStorageItem("user");
+        if (newStoredUser) {
+          setUserProfile(newStoredUser);
+        } else {
+          // User might have been cleared (e.g., logged out from another tab)
+          setUserProfile(null);
+        }
+      }
+    }
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("storage", handleStorageChange);
+      // Listen for custom event for same-page updates
+      window.addEventListener("userProfileUpdated", handleProfileUpdateEvent as EventListener);
+    }
+
+    // Cleanup listener on component unmount
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("storage", handleStorageChange);
+        window.removeEventListener("userProfileUpdated", handleProfileUpdateEvent as EventListener);
+      }
+    };
   }, []);
+
+  // Handler for the custom userProfileUpdated event
+  function handleProfileUpdateEvent(event: CustomEvent<UserProfile>) {
+    console.log("DashboardHeader: userProfileUpdated event received", event.detail);
+    if (event.detail) {
+      setUserProfile(event.detail);
+    }
+  }
 
   const getInitials = (firstName?: string, lastName?: string) => {
     if (firstName && lastName) {
@@ -186,7 +221,10 @@ export function DashboardHeader() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="my-2" />
               <DropdownMenuGroup>
-                <DropdownMenuItem className="rounded-lg px-3 py-2 cursor-pointer transition-colors hover:!bg-[#C89B3C]/20 focus:!bg-[#C89B3C]/20 dark:hover:!bg-[#C89B3C]/40 dark:focus:!bg-[#C89B3C]/40 hover:!text-slate-900 dark:hover:!text-slate-100">
+                <DropdownMenuItem
+                  onSelect={() => router.push("/profile")}
+                  className="rounded-lg px-3 py-2 cursor-pointer transition-colors hover:!bg-[#C89B3C]/20 focus:!bg-[#C89B3C]/20 dark:hover:!bg-[#C89B3C]/40 dark:focus:!bg-[#C89B3C]/40 hover:!text-slate-900 dark:hover:!text-slate-100"
+                >
                   <User className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>

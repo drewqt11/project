@@ -4,6 +4,7 @@ import com.apas.website.entities.UserEntity;
 import com.apas.website.entities.models.request.LoginRequest;
 import com.apas.website.entities.models.request.SignupRequest;
 import com.apas.website.entities.models.request.UpdateProfileRequest;
+import com.apas.website.entities.models.request.ChangePasswordRequest;
 import com.apas.website.entities.models.response.SignupResponse;
 import com.apas.website.entities.models.response.UserProfileResponse;
 import com.apas.website.repositories.UserRepository;
@@ -206,5 +207,45 @@ public class AuthController {
         );
         
         return ResponseEntity.ok(profileResponse);
+    }
+
+    @Operation(
+        summary = "Change user password", 
+        description = "Allows the currently authenticated user to change their password.",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Password changed successfully", 
+                     content = @Content(schema = @Schema(implementation = Map.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid input (e.g., passwords don't match, new password too short, current password incorrect)"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    @PutMapping("/profile/change-password")
+    public ResponseEntity<?> changeUserPassword(@Valid @RequestBody ChangePasswordRequest changePasswordRequest) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        
+        UserEntity currentUser = userRepository.findByEmail(userDetails.getUsername())
+            .orElseThrow(() -> new RuntimeException("Authenticated user not found with email: " + userDetails.getUsername()));
+
+        // Prevent OAuth2 users from attempting password change via this endpoint
+        if (currentUser.getIsOAuth2User()) {
+             Map<String, String> errorResponse = new HashMap<>();
+             errorResponse.put("message", "Password management is not available for OAuth2 accounts.");
+             return ResponseEntity.badRequest().body(errorResponse);
+        }
+
+        try {
+            authService.changePassword(currentUser.getUserId(), 
+                                       changePasswordRequest.getCurrentPassword(), 
+                                       changePasswordRequest.getNewPassword());
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Password changed successfully");
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse); // Or a more specific status code
+        }
     }
 } 

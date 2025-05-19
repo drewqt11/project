@@ -262,19 +262,19 @@ export default function DashboardPage() {
                     <TabsList className="bg-slate-100 dark:bg-slate-700 p-1 rounded-full">
                       <TabsTrigger
                         value="week"
-                        className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800/80 data-[state=active]:shadow-sm rounded-full px-3 md:px-4 py-1 text-xs md:text-sm data-[state=active]:text-[${iconColor}] dark:data-[state=active]:text-white"
+                        className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800/80 data-[state=active]:shadow-sm rounded-full px-3 md:px-4 py-1 text-xs md:text-sm data-[state=active]:text-[#6e0e0e] dark:data-[state=active]:text-[#6e0e0e]"
                       >
                         Week
                       </TabsTrigger>
                       <TabsTrigger
                         value="month"
-                        className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800/80 data-[state=active]:shadow-sm rounded-full px-3 md:px-4 py-1 text-xs md:text-sm data-[state=active]:text-[${iconColor}] dark:data-[state=active]:text-white"
+                        className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800/80 data-[state=active]:shadow-sm rounded-full px-3 md:px-4 py-1 text-xs md:text-sm data-[state=active]:text-[#6e0e0e] dark:data-[state=active]:text-[#6e0e0e]"
                       >
                         Month
                       </TabsTrigger>
                       <TabsTrigger
                         value="quarter"
-                        className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800/80 data-[state=active]:shadow-sm rounded-full px-3 md:px-4 py-1 text-xs md:text-sm data-[state=active]:text-[${iconColor}] dark:data-[state=active]:text-white"
+                        className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800/80 data-[state=active]:shadow-sm rounded-full px-3 md:px-4 py-1 text-xs md:text-sm data-[state=active]:text-[#6e0e0e] dark:data-[state=active]:text-[#6e0e0e]"
                       >
                         Quarter
                       </TabsTrigger>

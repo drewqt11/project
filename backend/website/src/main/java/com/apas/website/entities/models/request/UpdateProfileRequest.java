@@ -22,11 +22,4 @@ public class UpdateProfileRequest {
     @Pattern(regexp = "^[A-Z][a-zA-Z]*$", message = "Last name should start with a capital letter and contain only alphabets")
     @Schema(description = "User's last name", example = "Doe")
     private String lastName;
-
-    @Schema(description = "User's current password. Required if newPassword is provided.", example = "currentPassword123", nullable = true)
-    private String currentPassword;
-
-    @Size(min = 8, message = "New password must be at least 8 characters long")
-    @Schema(description = "User's new password. Must be at least 8 characters long.", example = "newSecurePassword456", nullable = true)
-    private String newPassword;
 } 

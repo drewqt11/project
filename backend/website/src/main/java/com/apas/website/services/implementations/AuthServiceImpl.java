@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -21,14 +22,16 @@ public class AuthServiceImpl implements AuthService {
     
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     
     @Value("${jwt.refreshExpiration:604800000}") // 7 days by default
     private int refreshTokenExpirationMs;
 
     @Autowired
-    public AuthServiceImpl(RefreshTokenRepository refreshTokenRepository, UserRepository userRepository) {
+    public AuthServiceImpl(RefreshTokenRepository refreshTokenRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -64,5 +67,30 @@ public class AuthServiceImpl implements AuthService {
         
         refreshTokenRepository.save(refreshToken);
         logger.info("Saved refresh token for user: {}", user.getUserId());
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(String userId, String currentPassword, String newPassword) {
+        logger.info("Attempting to change password for user ID: {}", userId);
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> {
+                    logger.warn("User not found with ID: {} during password change attempt", userId);
+                    return new RuntimeException("User not found with ID: " + userId);
+                });
+
+        if (user.getIsOAuth2User()) {
+            logger.warn("Attempt to change password for OAuth2 user ID: {}", userId);
+            throw new RuntimeException("Password cannot be changed for users logged in via OAuth2.");
+        }
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            logger.warn("Current password mismatch for user ID: {}", userId);
+            throw new RuntimeException("Incorrect current password.");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        logger.info("Password changed successfully for user ID: {}", userId);
     }
 } 
