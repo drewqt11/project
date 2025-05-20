@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ArrowRight, Palette, ShieldCheck, ListChecks } from "lucide-react";
 import Image from "next/image";
+import Cookies from "js-cookie";
 
 const featureDetails = [
   {
@@ -38,7 +39,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
+      const token = Cookies.get("token");
       if (token) {
         router.push("/dashboard");
       } else {
