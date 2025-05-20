@@ -66,6 +66,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                     .queryParam("email", user.getEmail())
                     .queryParam("firstName", user.getFirstName())
                     .queryParam("lastName", user.getLastName())
+                    .queryParam("isOAuth2User", true)
                     .build().toUriString();
             
             // Perform redirect to frontend with tokens

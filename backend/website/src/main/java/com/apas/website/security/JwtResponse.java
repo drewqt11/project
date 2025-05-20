@@ -32,12 +32,6 @@ public class JwtResponse {
     @Schema(description = "User email", example = "john.doe@example.com")
     private String email;
     
-    public JwtResponse(String token, String refreshToken, String userId, String firstName, String lastName, String email) {
-        this.token = token;
-        this.refreshToken = refreshToken;
-        this.userId = userId;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-    }
+    @Schema(description = "Indicates if the user account was created via OAuth2", example = "false")
+    private Boolean isOAuth2User;
 } 

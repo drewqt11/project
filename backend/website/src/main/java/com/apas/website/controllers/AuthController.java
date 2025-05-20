@@ -20,6 +20,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -80,10 +82,12 @@ public class AuthController {
         return ResponseEntity.ok(new JwtResponse(
                 jwt,
                 refreshToken,
+                "Bearer",
                 user.getUserId(),
                 user.getFirstName(),
                 user.getLastName(),
-                user.getEmail()
+                user.getEmail(),
+                user.getIsOAuth2User()
         ));
     }
 
@@ -114,7 +118,7 @@ public class AuthController {
         @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @PostMapping("/logout")
-    public ResponseEntity<?> logoutUser() {
+    public ResponseEntity<?> logoutUser(HttpServletRequest request) {
         // Get the authenticated user
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
@@ -125,6 +129,12 @@ public class AuthController {
         
         // Logout by revoking all refresh tokens
         authService.logout(user.getUserId());
+        
+        // Invalidate the HTTP session to help clear JSESSIONID
+        HttpSession session = request.getSession(false); // false == do not create new session if one does not exist
+        if (session != null) {
+            session.invalidate();
+        }
         
         Map<String, String> response = new HashMap<>();
         response.put("message", "Logged out successfully");

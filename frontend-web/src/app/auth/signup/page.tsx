@@ -124,17 +124,13 @@ export default function SignUpPage() {
   async function handleGoogleSignUp() {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/auth/google-login-url");
-      if (!response.ok) {
-        const errorResult = await response.json().catch(() => ({ message: "Failed to get Google login URL."}))
-        throw new Error(errorResult.message || "Could not initiate Google Sign-Up.");
-      }
-      const googleLoginUrl = await response.text();
-      window.location.href = googleLoginUrl;
+      // Directly redirect to the backend's OAuth2 authorization URL for Google
+      window.location.href = "http://localhost:8080/oauth2/authorization/google";
     } catch (err: any) {
       toast.error(err.message || "Could not initiate Google Sign-Up.");
-      setIsLoading(false);
+      setIsLoading(false); // Ensure loading is stopped on error
     }
+     // setIsLoading(false); // This will not be reached if redirect is successful
   }
 
   if (isLoadingAuth) {

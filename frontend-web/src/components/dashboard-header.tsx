@@ -35,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import Cookies from "js-cookie";
 
 interface UserProfile {
   userId: string;
@@ -44,11 +45,15 @@ interface UserProfile {
   avatarUrl?: string; // Optional avatar URL
 }
 
-// Function to safely get item from localStorage
-function getLocalStorageItem(key: string) {
-  if (typeof window !== "undefined" && window.localStorage) {
-    const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : null;
+// Function to safely get item from Cookies
+function getCookieItem(key: string) {
+  if (typeof window !== "undefined") {
+    const item = Cookies.get(key);
+    try {
+      return item ? JSON.parse(item) : null;
+    } catch (e) {
+      return item || null; // Return raw if not JSON
+    }
   }
   return null;
 }
@@ -59,7 +64,7 @@ export function DashboardHeader() {
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
 
   React.useEffect(() => {
-    const storedUser = getLocalStorageItem("user");
+    const storedUser = getCookieItem("user") as UserProfile | null;
     if (storedUser) {
       setUserProfile(storedUser);
     }
@@ -67,7 +72,7 @@ export function DashboardHeader() {
     // Listen for localStorage changes from other tabs/windows or profile page updates
     function handleStorageChange(event: StorageEvent) {
       if (event.key === "user") {
-        const newStoredUser = getLocalStorageItem("user");
+        const newStoredUser = getCookieItem("user") as UserProfile | null;
         if (newStoredUser) {
           setUserProfile(newStoredUser);
         } else {
@@ -130,10 +135,10 @@ export function DashboardHeader() {
       }
 
       // Clear client-side storage
-      if (typeof window !== "undefined" && window.localStorage) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("user");
+      if (typeof window !== "undefined") {
+        Cookies.remove("token");
+        Cookies.remove("refreshToken");
+        Cookies.remove("user");
       }
       
       setUserProfile(null); // Clear user profile state

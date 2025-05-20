@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import Cookies from "js-cookie";
 
 // You might want to add a loading spinner component
 // import { Spinner } from "@/components/ui/spinner"; 
@@ -19,6 +20,7 @@ export default function OAuthRedirectPage() {
     const firstName = searchParams.get("firstName");
     const lastName = searchParams.get("lastName");
     const error = searchParams.get("error");
+    const isOAuth2User = searchParams.get("isOAuth2User") === "true";
 
     if (error) {
       console.error("OAuth Error:", error);
@@ -30,11 +32,12 @@ export default function OAuthRedirectPage() {
     if (token && refreshToken && id && email) {
       // Store tokens and user info
       // IMPORTANT: Consider using secure HTTP-only cookies for tokens in a real app
-      localStorage.setItem("token", token);
-      localStorage.setItem("refreshToken", refreshToken);
-      localStorage.setItem(
+      Cookies.set("token", token, { expires: 1 });
+      Cookies.set("refreshToken", refreshToken, { expires: 7 });
+      Cookies.set(
         "user",
-        JSON.stringify({ id, email, firstName, lastName })
+        JSON.stringify({ id, email, firstName, lastName, isOAuth2User }),
+        { expires: 7 }
       );
 
       // Redirect to the main application (e.g., dashboard)

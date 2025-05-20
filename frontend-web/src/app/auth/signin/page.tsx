@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Eye, EyeOff, ArrowLeft, Users } from "lucide-react";
 import { toast } from "sonner";
+import Cookies from "js-cookie";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,7 +66,7 @@ export default function SignInPage() {
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
+      const token = Cookies.get("token");
       if (token) {
         router.push("/dashboard");
       } else {
@@ -101,16 +102,18 @@ export default function SignInPage() {
       }
 
       if (result.token && result.refreshToken && result.id && result.email) {
-        localStorage.setItem("token", result.token);
-        localStorage.setItem("refreshToken", result.refreshToken);
-        localStorage.setItem(
+        Cookies.set("token", result.token, { expires: 1 });
+        Cookies.set("refreshToken", result.refreshToken, { expires: 7 });
+        Cookies.set(
           "user",
           JSON.stringify({
             id: result.id,
             email: result.email,
             firstName: result.firstName,
             lastName: result.lastName,
-          })
+            isOAuth2User: result.isOAuth2User
+          }),
+          { expires: 7 }
         );
         toast.success("Logged in successfully!");
         router.push("/dashboard");
@@ -126,17 +129,13 @@ export default function SignInPage() {
   async function handleGoogleSignIn() {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/auth/google-login-url");
-      if (!response.ok) {
-        const errorResult = await response.json().catch(() => ({ message: "Failed to get Google login URL."}))
-        throw new Error(errorResult.message || "Could not initiate Google Sign-In.");
-      }
-      const googleLoginUrl = await response.text();
-      window.location.href = googleLoginUrl;
+      // Directly redirect to the backend's OAuth2 authorization URL for Google
+      window.location.href = "http://localhost:8080/oauth2/authorization/google";
     } catch (err: any) {
       toast.error(err.message || "Could not initiate Google Sign-In.");
+      setIsLoading(false); // Ensure loading is stopped on error
     }
-    setIsLoading(false);
+    // setIsLoading(false); // This will not be reached if redirect is successful
   }
 
   if (isLoadingAuth) {

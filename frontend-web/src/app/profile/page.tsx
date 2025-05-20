@@ -24,6 +24,7 @@ import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, User, Lock, Save, AlertCircle } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
+import Cookies from "js-cookie";
 
 // Define UserProfile interface based on expected data
 interface UserProfile {
@@ -61,7 +62,7 @@ export default function ProfilePage() {
       setIsLoading(true)
       setError(null)
       try {
-        const token = localStorage.getItem("token")
+        const token = Cookies.get("token")
         if (!token) {
           toast.error("Authentication token not found. Please sign in.")
           router.push("/auth/signin")
@@ -113,7 +114,7 @@ export default function ProfilePage() {
     setIsSaving(true)
     setError(null)
     try {
-      const token = localStorage.getItem("token")
+      const token = Cookies.get("token")
       if (!token) {
         toast.error("Authentication token not found. Please sign in.")
         router.push("/auth/signin")
@@ -141,9 +142,9 @@ export default function ProfilePage() {
 
       const updatedUser: UserProfile = await response.json()
       setUser(updatedUser)
-      // Update localStorage with the new user details
+      // Update Cookies with the new user details
       if (typeof window !== "undefined") {
-        localStorage.setItem("user", JSON.stringify(updatedUser));
+        Cookies.set("user", JSON.stringify(updatedUser), { expires: 7 });
         // Dispatch a custom event to notify other components (like the header)
         window.dispatchEvent(new CustomEvent("userProfileUpdated", { detail: updatedUser }));
       }
@@ -186,27 +187,21 @@ export default function ProfilePage() {
 
   // Handles the click on "Update Password" button, shows confirmation dialog
   const handleUpdatePasswordClick = () => {
-    console.log("handleUpdatePasswordClick triggered");
-    console.log("Passwords:", { currentPassword, newPassword, confirmPassword });
     setPasswordError(null); // Clear previous errors
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      console.log("Validation failed: All fields required.");
       setPasswordError("All password fields are required.");
       return;
     }
     if (newPassword !== confirmPassword) {
-      console.log("Validation failed: Passwords do not match.");
       setPasswordError("New password and confirm password do not match.");
       return;
     }
     if (newPassword.length < 8) {
-      console.log("Validation failed: Password too short.");
       setPasswordError("New password must be at least 8 characters long.");
       return;
     }
 
-    console.log("All validations passed. Opening alert dialog.");
     setIsPasswordAlertOpen(true);
   };
 
@@ -216,7 +211,7 @@ export default function ProfilePage() {
     setPasswordError(null);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = Cookies.get("token");
       if (!token) {
         toast.error("Authentication token not found. Please sign in.");
         router.push("/auth/signin");
