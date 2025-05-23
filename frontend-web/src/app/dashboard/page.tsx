@@ -97,6 +97,15 @@ interface UserProfile {
   avatarUrl?: string;
 }
 
+// Interface for individual portfolio summary (adjust as per your API response)
+interface PortfolioSummary {
+  portfolioId: string;
+  title: string;
+  lastUpdatedAt?: string; // Expecting this from your API for trends
+  createdAt?: string; // Ideal for creation trends
+  // Add any other relevant fields from your GET /api/users/{userId}/portfolios response
+}
+
 // Function to safely get item from localStorage
 function getCookieItem(key: string) {
   if (typeof window !== "undefined") {
@@ -121,8 +130,14 @@ export default function DashboardPage() {
 
   // State for Portfolio Trends Chart
   const [portfolioTimeRange, setPortfolioTimeRange] = useState("week");
-  const [portfolioChartLoading, setPortfolioChartLoading] = useState(true);
+  const [portfolioChartLoading, setPortfolioChartLoading] = useState(true); // This will now depend on allPortfoliosLoading
   const [portfolioChartData, setPortfolioChartData] = useState<any[]>([]); // Define a proper type later
+
+  // State for all user portfolios and total count
+  const [allUserPortfolios, setAllUserPortfolios] = useState<PortfolioSummary[]>([]);
+  const [isAllPortfoliosLoading, setIsAllPortfoliosLoading] = useState(true);
+  const [totalPortfoliosCount, setTotalPortfoliosCount] = useState(0);
+  const [portfoliosError, setPortfoliosError] = useState<string | null>(null);
 
   const portfolioChartConfig: ChartConfig = {
     portfolios: {
@@ -132,47 +147,235 @@ export default function DashboardPage() {
     },
   };
 
-  // Effect to load/mock portfolio chart data based on time range
-  useEffect(() => {
-    const fetchData = async () => {
-      setPortfolioChartLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      let mockData = [];
-      const endDate = new Date();
-      if (portfolioTimeRange === "week") {
-        for (let i = 6; i >= 0; i--) {
-          const date = new Date(endDate);
-          date.setDate(endDate.getDate() - i);
-          mockData.push({ 
-            date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), 
-            portfolios: Math.floor(Math.random() * 5) + 1 
-          });
-        }
-      } else if (portfolioTimeRange === "month") {
-        for (let i = 3; i >= 0; i--) { // 4 weeks
-          const weekEndDate = new Date(endDate);
-          weekEndDate.setDate(endDate.getDate() - i * 7);
-          mockData.push({ 
-            date: weekEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            portfolios: Math.floor(Math.random() * 10) + 5 
-          });
-        }
-      } else if (portfolioTimeRange === "quarter") {
-        for (let i = 2; i >= 0; i--) { // 3 months
-          // Get the last day of the month for each of the last 3 months
-          const monthEndDate = new Date(endDate.getFullYear(), endDate.getMonth() - i + 1, 0);
-          mockData.push({ 
-            date: monthEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            portfolios: Math.floor(Math.random() * 20) + 10 
-          });
-        }
-      }
-      setPortfolioChartData(mockData);
+  // Function to process portfolio data for the chart
+  function processPortfolioDataForChart(
+    portfolios: PortfolioSummary[],
+    range: "week" | "month" | "quarter"
+  ): { date: string; portfolios: number }[] {
+    if (!portfolios || portfolios.length === 0) {
       setPortfolioChartLoading(false);
-    };
-    fetchData();
-  }, [portfolioTimeRange]);
+      return [];
+    }
+
+    const now = new Date();
+    const validPortfolios = portfolios
+      .filter(p => p.createdAt && !isNaN(new Date(p.createdAt).getTime()))
+      .map(p => ({ ...p, createdAtDate: new Date(p.createdAt!) }))
+      .sort((a, b) => a.createdAtDate.getTime() - b.createdAtDate.getTime());
+
+    if (validPortfolios.length === 0) {
+        setPortfolioChartLoading(false);
+        return [];
+    }
+    
+    let processedData: { date: string; portfolios: number }[] = [];
+    const counts: { [key: string]: number } = {};
+
+    if (range === "week") {
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - now.getDay()); // Start of current week (Sunday)
+      weekStart.setHours(0, 0, 0, 0);
+
+      // Initialize counts for the last 7 days
+      for (let i = 0; i < 7; i++) {
+        const day = new Date(weekStart);
+        day.setDate(weekStart.getDate() + i - (6 - now.getDay())); // Adjust to show current day as last point
+         if (day > now) continue; // Don't project into future
+        const formattedDate = day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        counts[formattedDate] = 0;
+      }
+      
+      validPortfolios.forEach(p => {
+        const portfolioDate = p.createdAtDate;
+        // Check if the portfolio was created within the last 7 days from 'now'
+        const sevenDaysAgo = new Date(now);
+        sevenDaysAgo.setDate(now.getDate() - 6); // Includes today
+        sevenDaysAgo.setHours(0,0,0,0);
+
+        if (portfolioDate >= sevenDaysAgo && portfolioDate <= now) {
+            const formattedDate = portfolioDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            if (counts[formattedDate] !== undefined) { // Ensure we only count for the initialized days
+                 counts[formattedDate]++;
+            }
+        }
+      });
+      // Fill processedData based on the days of the current week leading up to 'now'
+        for (let i = 6; i >= 0; i--) {
+            const day = new Date(now);
+            day.setDate(now.getDate() - i);
+            day.setHours(0, 0, 0, 0);
+            const formattedDate = day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+             // Ensure we only add dates that were initialized
+            if(counts[formattedDate] !== undefined) {
+                processedData.push({ date: formattedDate, portfolios: counts[formattedDate] || 0 });
+            } else {
+                 // If a date within the last 7 days wasn't initialized (e.g. due to specific start of week calc),
+                 // but we expect it, add it with 0. This handles cases where the 7-day window spans across week starts.
+                 const sevenDaysAgo = new Date(now);
+                 sevenDaysAgo.setDate(now.getDate() - 6);
+                 sevenDaysAgo.setHours(0,0,0,0);
+                 if(day >= sevenDaysAgo){
+                    processedData.push({ date: formattedDate, portfolios: 0 });
+                 }
+            }
+        }
+        // Ensure exactly 7 data points, filling with 0 if necessary for past days leading to 'now'
+        const finalWeekData: { date: string; portfolios: number }[] = [];
+        for (let i = 6; i >= 0; i--) {
+            const day = new Date(now);
+            day.setDate(now.getDate() - i);
+            const formattedDate = day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const existingEntry = processedData.find(d => d.date === formattedDate);
+            if (existingEntry) {
+                finalWeekData.push(existingEntry);
+            } else {
+                finalWeekData.push({ date: formattedDate, portfolios: 0 });
+            }
+        }
+        processedData = finalWeekData;
+
+
+    } else if (range === "month") {
+      // Aggregates by week for the current month
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      const numWeeks = Math.ceil((monthEnd.getDate() + monthStart.getDay()) / 7);
+
+      for (let i = 0; i < numWeeks; i++) {
+        const weekStartDate = new Date(monthStart);
+        weekStartDate.setDate(monthStart.getDate() + i * 7 - monthStart.getDay()); // Start of week (Sunday)
+        
+        // Ensure weekStartDate does not go before monthStart due to getDay()
+        if (weekStartDate < monthStart && weekStartDate.getMonth() !== monthStart.getMonth()) {
+            weekStartDate.setDate(weekStartDate.getDate() + 7);
+        }
+        if (weekStartDate.getMonth() !== monthStart.getMonth() && i === 0) {
+             // Special handling for the first week if its Sunday is in the previous month
+        }
+
+
+        const weekEndDate = new Date(weekStartDate);
+        weekEndDate.setDate(weekStartDate.getDate() + 6);
+        weekEndDate.setHours(23,59,59,999); // End of day
+
+        // Clamp weekEndDate to not exceed current date 'now' or monthEnd
+        const displayEndDate = new Date(Math.min(weekEndDate.getTime(), now.getTime(), monthEnd.getTime()));
+        
+        //Ensure the week displayed is within the current month or ends today
+        if (weekStartDate > now ) continue;
+
+
+        const formattedWeekLabel = `${weekStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+        // const formattedWeekLabel = `W${i + 1} (${displayEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})`;
+        counts[formattedWeekLabel] = 0;
+
+        validPortfolios.forEach(p => {
+          if (p.createdAtDate >= weekStartDate && p.createdAtDate <= displayEndDate) {
+            counts[formattedWeekLabel]++;
+          }
+        });
+         processedData.push({ date: formattedWeekLabel, portfolios: counts[formattedWeekLabel] });
+      }
+      // Ensure there are at least 4 data points for the month, even if some are 0
+        const expectedWeeks = 4; 
+        if (processedData.length < expectedWeeks) {
+            for (let i = processedData.length; i < expectedWeeks; i++) {
+                // Attempt to create meaningful labels for empty future weeks within the month if applicable
+                const futureWeekStartGuess = new Date(now.getFullYear(), now.getMonth(), 1);
+                futureWeekStartGuess.setDate(futureWeekStartGuess.getDate() + i*7 - futureWeekStartGuess.getDay());
+                if (futureWeekStartGuess.getMonth() === now.getMonth() && futureWeekStartGuess <= now) {
+                     const label = `${futureWeekStartGuess.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+                     if (!processedData.find(dp => dp.date === label)) { // Avoid duplicate dates
+                        processedData.push({ date: label, portfolios: 0 });
+                     }
+                } else {
+                    // Fallback label if the above is not suitable or to ensure unique keys
+                    const label = `Week ${i + 1}`;
+                     if (!processedData.find(dp => dp.date === label)) {
+                        processedData.push({ date: label, portfolios: 0 });
+                     }
+                }
+            }
+            // Sort by date again if new entries were added, assuming labels are sortable or manage order
+            processedData.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            // Ensure we don't exceed a sensible number of points (e.g. 5 for a month with partial 5th week)
+            processedData = processedData.slice(0, 5); 
+        }
+
+
+    } else if (range === "quarter") {
+      // Aggregates by month for the current quarter
+      const currentMonth = now.getMonth();
+      const quarterStartMonth = Math.floor(currentMonth / 3) * 3;
+
+      for (let i = 0; i < 3; i++) {
+        const monthDate = new Date(now.getFullYear(), quarterStartMonth + i, 1);
+        if (monthDate > now) continue; // Don't project into future months
+
+        const monthEnd = new Date(now.getFullYear(), quarterStartMonth + i + 1, 0);
+        // Clamp monthEnd to not exceed current date 'now'
+        const displayMonthEnd = new Date(Math.min(monthEnd.getTime(), now.getTime()));
+
+        const formattedMonth = monthDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        counts[formattedMonth] = 0;
+
+        validPortfolios.forEach(p => {
+          if (p.createdAtDate.getFullYear() === monthDate.getFullYear() &&
+              p.createdAtDate.getMonth() === monthDate.getMonth() &&
+              p.createdAtDate <= displayMonthEnd) { // Ensure it's within the part of the month that has passed
+            counts[formattedMonth]++;
+          }
+        });
+        processedData.push({ date: formattedMonth, portfolios: counts[formattedMonth] });
+      }
+       // Ensure 3 data points for the quarter
+        const expectedMonths = 3;
+        if(processedData.length < expectedMonths) {
+            for(let i=0; i<expectedMonths; i++) {
+                const month = new Date(now.getFullYear(), quarterStartMonth + i, 1);
+                const formattedMonth = month.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                if (!processedData.find(dp => dp.date === formattedMonth)) {
+                    if (month <= now) { // Only add if the month has started
+                        processedData.push({ date: formattedMonth, portfolios: 0});
+                    } else {
+                        // For future months in quarter, can add with 0 or omit
+                        // Adding with 0 for consistent 3 points if the quarter isn't over
+                         processedData.push({ date: formattedMonth, portfolios: 0});
+                    }
+                }
+            }
+             // Sort again as we might have added missing months out of order
+            processedData.sort((a, b) => {
+                const dateA = new Date(a.date.split(" ")[0] + " 1, " + a.date.split(" ")[1]);
+                const dateB = new Date(b.date.split(" ")[0] + " 1, " + b.date.split(" ")[1]);
+                return dateA.getTime() - dateB.getTime();
+            });
+        }
+    }
+    
+    setPortfolioChartLoading(false);
+    return processedData;
+  }
+
+  // New useEffect to process real portfolio data for the chart
+  useEffect(() => {
+    if (isAllPortfoliosLoading) {
+      setPortfolioChartLoading(true); // Keep chart loading if portfolios are loading
+      return;
+    }
+    
+    if (allUserPortfolios) { 
+      const chartData = processPortfolioDataForChart(
+        allUserPortfolios,
+        portfolioTimeRange as "week" | "month" | "quarter"
+      );
+      setPortfolioChartData(chartData);
+      // setPortfolioChartLoading is now handled within processPortfolioDataForChart
+    } else {
+      setPortfolioChartData([]); 
+      setPortfolioChartLoading(false);
+    }
+  }, [allUserPortfolios, portfolioTimeRange, isAllPortfoliosLoading]); // isAllPortfoliosLoading dependency is important
 
   // Custom Tooltip for the chart
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -190,20 +393,19 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const token = Cookies.get("token");
-      const storedUser = getCookieItem("user") as UserProfile | null; // Get user info
+    setIsLoadingAuth(true); // Start auth loading
+    const token = Cookies.get("token");
+    const storedUser = getCookieItem("user") as UserProfile | null;
 
-      if (!token) {
-        router.push("/auth/signin");
-      } else {
-        setIsAuthenticated(true);
-        if (storedUser) { // Set user profile
-          setUserProfile(storedUser);
-        }
-      }
+    if (!token || !storedUser?.id) {
+      router.push("/auth/signin");
+      setIsLoadingAuth(false); // Stop auth loading if redirecting
+      return;
     }
-    setIsLoadingAuth(false);
+    
+    setIsAuthenticated(true);
+    setUserProfile(storedUser);
+    setIsLoadingAuth(false); // Stop auth loading after setting user
 
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -211,6 +413,56 @@ export default function DashboardPage() {
 
     return () => clearInterval(timer);
   }, [router]);
+
+  // New useEffect to fetch all portfolios when userProfile is available
+  useEffect(() => {
+    if (userProfile?.id) {
+      async function fetchUserPortfolios() {
+        setIsAllPortfoliosLoading(true);
+        setPortfoliosError(null);
+        const token = Cookies.get("token");
+
+        if (!token) {
+          // This case should ideally be caught by the auth useEffect,
+          // but as a safeguard:
+          setPortfoliosError("Authentication token not found.");
+          setIsAllPortfoliosLoading(false);
+          // Potentially redirect or show a global error
+          return;
+        }
+
+        try {
+          const response = await fetch(`/api/users/${userProfile!.id}/portfolios`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!response.ok) {
+            if (response.status === 404) { // No portfolios found
+              setAllUserPortfolios([]);
+              setTotalPortfoliosCount(0);
+            } else {
+              const errorData = await response.json().catch(() => ({}));
+              throw new Error(errorData.message || `Failed to fetch portfolios (status: ${response.status})`);
+            }
+          } else {
+            const data: PortfolioSummary[] = await response.json();
+            setAllUserPortfolios(data);
+            setTotalPortfoliosCount(data.length);
+          }
+        } catch (err: any) {
+          console.error("Error fetching user portfolios:", err);
+          setPortfoliosError(err.message || "An unexpected error occurred while fetching portfolios.");
+          setAllUserPortfolios([]);
+          setTotalPortfoliosCount(0);
+        } finally {
+          setIsAllPortfoliosLoading(false);
+        }
+      }
+      fetchUserPortfolios();
+    }
+  }, [userProfile]);
 
   // const filteredPortfolios = portfolios.filter(
   //   (portfolio) =>
@@ -371,73 +623,74 @@ export default function DashboardPage() {
               </div>
 
               {/* Total Portfolio Created Card - NEW */}
-              <Card className="border-none shadow-xl overflow-hidden bg-white dark:bg-slate-800 rounded-xl hover:shadow-2xl transition-shadow duration-200 group flex flex-col flex-1 min-h-[140px]">
-                
-                <CardContent className="p-6 flex flex-col flex-1 justify-center">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className={`text-sm font-medium ${secondaryTextColor}`}>Total Portfolios Created</p>
-                      <h3 className={`text-3xl font-bold ${primaryTextColor} mt-1`}>
-                        0
-                      </h3>
+              <Link href="/portfolios/showcase" passHref>
+                <Card className="border-none shadow-xl overflow-hidden bg-white dark:bg-slate-800 rounded-xl hover:shadow-2xl transition-shadow duration-200 group flex flex-col flex-1 min-h-[140px] cursor-pointer">
+                  <CardContent className="p-6 flex flex-col flex-1 justify-center">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className={`text-sm font-medium ${secondaryTextColor}`}>Total Portfolios Created</p>
+                        <h3 className={`text-3xl font-bold ${primaryTextColor} mt-1`}>
+                          {isAllPortfoliosLoading ? <Skeleton className="h-8 w-12 inline-block" /> : totalPortfoliosCount}
+                        </h3>
+                      </div>
+                      <div className={`h-14 w-14 bg-[#4a0001]/10 dark:bg-[#4a0001]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                        <Briefcase className={`h-7 w-7 ${iconColor}`} />
+                      </div>
                     </div>
-                    <div className={`h-14 w-14 bg-[#4a0001]/10 dark:bg-[#4a0001]/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                      <Briefcase className={`h-7 w-7 ${iconColor}`} />
+                    <div className={`mt-4 pt-4 border-t border-slate-100 dark:border-slate-700/50`}>
+                      <div className={`text-xs ${secondaryTextColor}`}>
+                        {isAllPortfoliosLoading ? <Skeleton className="h-4 w-3/4" /> : `You currently have ${totalPortfoliosCount} ${totalPortfoliosCount === 1 ? "portfolio" : "portfolios"}.`}
+                      </div>
                     </div>
-                  </div>
-                  <div className={`mt-4 pt-4 border-t border-slate-100 dark:border-slate-700/50`}>
-                    <p className={`text-xs ${secondaryTextColor}`}>
-                      You currently have 0 portfolios.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             </div> {/* End of wrapper for right column cards */}
           </div>
-
+  
           {/* Create new portfolio card section */}
           <div className="space-y-6">
-            <h2 className={`text-2xl font-semibold tracking-tight ${primaryTextColor} mb-4`}>
-              Start your Journey here
-            </h2>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
               {/* Create new portfolio card */}
-              <Card className="border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:border-slate-400 dark:hover:border-slate-600 transition-colors flex flex-col justify-center items-center min-h-[280px]">
-                <CardHeader className="flex flex-col items-center text-center pb-1">
-                  <div className={`h-20 w-20 bg-green-500/10 dark:bg-green-500/20 rounded-full flex items-center justify-center mb-3`}>
-                    <Plus className={`h-10 w-10 text-green-600 dark:text-green-400`} />
-                  </div>
-                  <CardTitle className={`text-xl font-semibold leading-tight ${primaryTextColor}`}>
-                    Create
-                    <br />
-                    Portfolio
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-center pt-3 pb-5">
-                  <p className={`text-sm ${secondaryTextColor}`}>
-                    Start from scratch or use a template.
-                  </p>
-                </CardContent>
-              </Card>
-
+              <Link href="/portfolios/create" passHref>
+                <Card className="cursor-pointer border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:border-slate-400 dark:hover:border-slate-600 hover:shadow-lg transition-all flex flex-col justify-center items-center min-h-[280px]">
+                  <CardHeader className="flex flex-col items-center text-center pb-1">
+                    <div className={`h-20 w-20 bg-green-500/10 dark:bg-green-500/20 rounded-full flex items-center justify-center mb-3`}>
+                      <Plus className={`h-10 w-10 text-green-600 dark:text-green-400`} />
+                    </div>
+                    <CardTitle className={`text-xl font-semibold leading-tight ${primaryTextColor}`}>
+                      Create
+                      <br />
+                      Portfolio
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center pt-3 pb-5">
+                    <p className={`text-sm ${secondaryTextColor}`}>
+                      Start from scratch and create your portfolio.
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
+  
               {/* Generate into PDF card - New Placeholder */}
-              <Card className="border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:border-slate-400 dark:hover:border-slate-600 transition-colors flex flex-col justify-center items-center min-h-[280px]">
-                <CardHeader className="flex flex-col items-center text-center pb-1">
-                  <div className={`h-20 w-20 bg-amber-500/10 dark:bg-amber-500/20 rounded-full flex items-center justify-center mb-3`}>
-                    <FileOutput className={`h-10 w-10 text-amber-600 dark:text-amber-400`} />
-                  </div>
-                  <CardTitle className={`text-xl font-semibold leading-tight ${primaryTextColor}`}>
-                    Generate into PDF
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-center pt-3 pb-5">
-                  <p className={`text-sm ${secondaryTextColor}`}>
-                    Convert your existing portfolio to a PDF.
-                  </p>
-                </CardContent>
-                {/* Optional: Add a button or link here later */}
-              </Card>
-
+              <Link href="/portfolios/select-for-pdf" passHref>
+                <Card className="cursor-pointer border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:border-slate-400 dark:hover:border-slate-600 transition-all flex flex-col justify-center items-center min-h-[280px]">
+                  <CardHeader className="flex flex-col items-center text-center pb-1">
+                    <div className={`h-20 w-20 bg-amber-500/10 dark:bg-amber-500/20 rounded-full flex items-center justify-center mb-3`}>
+                      <FileOutput className={`h-10 w-10 text-amber-600 dark:text-amber-400`} />
+                    </div>
+                    <CardTitle className={`text-xl font-semibold leading-tight ${primaryTextColor}`}>
+                      Generate PDF
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center pt-3 pb-5">
+                    <p className={`text-sm ${secondaryTextColor}`}>
+                      Convert your existing portfolio to a PDF.
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
+  
               {/* Download a Portfolio card - New Placeholder */}
               <Card className="border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:border-slate-400 dark:hover:border-slate-600 transition-colors flex flex-col justify-center items-center min-h-[280px]">
                 <CardHeader className="flex flex-col items-center text-center pb-1">
@@ -445,7 +698,7 @@ export default function DashboardPage() {
                     <FileDown className={`h-10 w-10 text-blue-600 dark:text-blue-400`} />
                   </div>
                   <CardTitle className={`text-xl font-semibold leading-tight ${primaryTextColor}`}>
-                    Download Portfolio
+                    Download PDF
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-center pt-3 pb-5">
@@ -469,4 +722,4 @@ export default function DashboardPage() {
       </footer>
     </div>
   );
-} 
+}

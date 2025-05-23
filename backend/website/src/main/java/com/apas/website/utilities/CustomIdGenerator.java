@@ -9,6 +9,7 @@ public class CustomIdGenerator {
     
     private static final String USER_PREFIX = "USER";
     private static final String PORTFOLIO_PREFIX = "PORT";
+    private static final String PDF_PREFIX = "PDF";
     private static final int FIRST_SECTION_LENGTH = 4;
     private static final int SECOND_SECTION_LENGTH = 4;
     private static final String SECTION_SEPARATOR = "-";
@@ -39,6 +40,21 @@ public class CustomIdGenerator {
     public static String generatePortfolioId() {
         StringBuilder sb = new StringBuilder();
         sb.append(PORTFOLIO_PREFIX).append(SECTION_SEPARATOR);
+        sb.append(generateRandomString(FIRST_SECTION_LENGTH)).append(SECTION_SEPARATOR);
+        sb.append(generateRandomString(SECOND_SECTION_LENGTH));
+        
+        return sb.toString();
+    }
+    
+    /**
+     * Generates a PDF ID in the format "PDF-XXXX-XXXX" 
+     * where X is a random alphanumeric character (0-9, A-Z).
+     * 
+     * @return A formatted PDF ID string
+     */
+    public static String generatePdfId() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(PDF_PREFIX).append(SECTION_SEPARATOR);
         sb.append(generateRandomString(FIRST_SECTION_LENGTH)).append(SECTION_SEPARATOR);
         sb.append(generateRandomString(SECOND_SECTION_LENGTH));
         
@@ -93,6 +109,25 @@ public class CustomIdGenerator {
         String[] parts = id.split(SECTION_SEPARATOR);
         return parts.length == 3 && 
                parts[0].equals(PORTFOLIO_PREFIX) && 
+               parts[1].length() == FIRST_SECTION_LENGTH && 
+               parts[2].length() == SECOND_SECTION_LENGTH;
+    }
+
+    /**
+     * Validates if the given string matches the PDF ID format.
+     * 
+     * @param id The ID to validate
+     * @return true if the ID matches the format, false otherwise
+     */
+    public static boolean isValidPdfIdFormat(String id) {
+        if (id == null || id.length() != PDF_PREFIX.length() + 2 * SECTION_SEPARATOR.length() + 
+                FIRST_SECTION_LENGTH + SECOND_SECTION_LENGTH) {
+            return false;
+        }
+        
+        String[] parts = id.split(SECTION_SEPARATOR);
+        return parts.length == 3 && 
+               parts[0].equals(PDF_PREFIX) && 
                parts[1].length() == FIRST_SECTION_LENGTH && 
                parts[2].length() == SECOND_SECTION_LENGTH;
     }

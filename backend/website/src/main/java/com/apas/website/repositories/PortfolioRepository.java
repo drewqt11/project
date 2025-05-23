@@ -13,4 +13,5 @@ public interface PortfolioRepository extends JpaRepository<PortfolioEntity, Stri
     List<PortfolioEntity> findByUser(UserEntity user);
     List<PortfolioEntity> findByUserUserId(String userId);
     Optional<PortfolioEntity> findByPortfolioIdAndUserUserId(String portfolioId, String userId);
+    Optional<PortfolioEntity> findByPortfolioId(String portfolioId);
 } 

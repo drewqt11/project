@@ -25,4 +25,7 @@ public class PdfGenerationRequest {
     
     @Schema(description = "Page size (A4, LETTER, etc.)", example = "A4", defaultValue = "A4")
     private String pageSize = "A4";
+
+    @Schema(description = "A custom name for this specific PDF generation (e.g., 'Version for Client X', 'Initial Draft')", example = "Client X Proposal")
+    private String customPdfName;
 } 

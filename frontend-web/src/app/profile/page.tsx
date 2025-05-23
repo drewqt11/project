@@ -369,12 +369,12 @@ export default function ProfilePage() {
           {/* Profile tabs */}
           <Tabs defaultValue="profile" className="space-y-6">
             <TabsList className="bg-slate-100 dark:bg-slate-700 p-1 rounded-full"> 
-              <TabsTrigger value="profile" className="gap-2 px-3 py-1.5 text-sm rounded-full data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800/80 data-[state=active]:shadow-sm data-[state=active]:text-[#6e0e0e]"> 
-                <User className="h-4 w-4" />
+              <TabsTrigger value="profile" className="gap-2 px-8 py-3 text-lg rounded-full data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800/80 data-[state=active]:shadow-sm data-[state=active]:text-[#6e0e0e]"> 
+                <User className="h-6 w-6" />
                 Profile
               </TabsTrigger>
-              <TabsTrigger value="security" className="gap-2 px-3 py-1.5 text-sm rounded-full data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800/80 data-[state=active]:shadow-sm data-[state=active]:text-[#6e0e0e]"> 
-                <Lock className="h-4 w-4" />
+              <TabsTrigger value="security" className="gap-2 px-8 py-3 text-lg rounded-full data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800/80 data-[state=active]:shadow-sm data-[state=active]:text-[#6e0e0e]"> 
+                <Lock className="h-6 w-6" />
                 Security
               </TabsTrigger>
             </TabsList>
