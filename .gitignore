@@ -10,7 +10,6 @@
 .idea/
 .vscode/
 .cursor/
-.backend/website/src/main/resources/application.properties
 *.swp
 *.swo
 *~
