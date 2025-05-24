@@ -238,19 +238,46 @@ backend/website/
    ```
 
 3. **Set up environment variables**
+   Create environment variables for your sensitive configuration:
+   
+   **Option 1: Environment Variables (Recommended for Production)**
+   ```bash
+   # Database Configuration
+   export DATABASE_URL="jdbc:postgresql://localhost:5432/folioflow_db"
+   export DATABASE_USERNAME="your_postgres_username"
+   export DATABASE_PASSWORD="your_postgres_password"
+   
+   # JWT Configuration (Generate a secure secret)
+   export JWT_SECRET="your-super-secret-jwt-key-here-at-least-256-bits-long"
+   export JWT_EXPIRATION="86400000"
+   export JWT_REFRESH_EXPIRATION="604800000"
+   
+   # Google OAuth2 Configuration
+   export GOOGLE_CLIENT_ID="your-google-oauth2-client-id"
+   export GOOGLE_CLIENT_SECRET="your-google-oauth2-client-secret"
+   
+   # OAuth2 Redirect URI
+   export OAUTH2_REDIRECT_URI="http://localhost:3000/oauth2/redirect"
+   ```
+   
+   **Option 2: Create `.env` file (For Local Development)**
+   ```bash
+   # Create .env file in backend/website/ directory
+   cd backend/website
+   touch .env
+   ```
+   
+   Then add your variables to the `.env` file:
    ```properties
-   # src/main/resources/application.properties
-   spring.datasource.url=jdbc:postgresql://localhost:5432/folioflow_db
-   spring.datasource.username=your_username
-   spring.datasource.password=your_password
-   
-   # JWT Configuration
-   app.jwt.secret=your-secret-key
-   app.jwt.expiration=86400000
-   
-   # Google OAuth2
-   spring.security.oauth2.client.registration.google.client-id=your-google-client-id
-   spring.security.oauth2.client.registration.google.client-secret=your-google-client-secret
+   DATABASE_URL=jdbc:postgresql://localhost:5432/folioflow_db
+   DATABASE_USERNAME=your_postgres_username
+   DATABASE_PASSWORD=your_postgres_password
+   JWT_SECRET=your-super-secret-jwt-key-here-at-least-256-bits-long
+   JWT_EXPIRATION=86400000
+   JWT_REFRESH_EXPIRATION=604800000
+   GOOGLE_CLIENT_ID=your-google-oauth2-client-id
+   GOOGLE_CLIENT_SECRET=your-google-oauth2-client-secret
+   OAUTH2_REDIRECT_URI=http://localhost:3000/oauth2/redirect
    ```
 
 4. **Build and run**
