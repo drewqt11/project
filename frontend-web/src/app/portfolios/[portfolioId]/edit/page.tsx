@@ -58,8 +58,13 @@ const employmentHistoryItemSchema = z.object({
   id: z.string().optional(), // For existing items during update
   company: z.string().min(1, "Company name is required.").max(100),
   position: z.string().min(1, "Position is required.").max(100),
-  startDate: z.string().min(1, "Start date is required.").max(7), // YYYY-MM
-  endDate: z.string().max(7).optional().or(z.literal('')), // YYYY-MM or "Present"
+  startDate: z.string().length(4, "Start year must be YYYY format."),
+  endDate: z.string()
+    .refine(val => val === "" || val.toLowerCase() === "present" || /^\d{4}$/.test(val), {
+        message: "End year must be YYYY or 'Present'.",
+    })
+    .optional()
+    .or(z.literal('')),
   description: z.string().max(2000).optional().or(z.literal('')),
 });
 
@@ -68,9 +73,13 @@ const educationalBackgroundItemSchema = z.object({
   id: z.string().optional(),
   institution: z.string().min(1, "Institution name is required.").max(100),
   degree: z.string().min(1, "Degree is required.").max(100),
-  fieldOfStudy: z.string().max(100).optional().or(z.literal('')),
-  graduationYear: z.string().max(4).optional().or(z.literal('')), // YYYY
-  gpa: z.string().max(10).optional().or(z.literal('')),
+  startDate: z.string().length(4, "Start year must be YYYY format."),
+  endDate: z.string()
+    .refine(val => val === "" || val.toLowerCase() === "present" || /^\d{4}$/.test(val), {
+        message: "End year must be YYYY or 'Present'.",
+    })
+    .optional()
+    .or(z.literal('')),
 });
 
 // Skill Item (within a category)
@@ -180,11 +189,11 @@ export default function EditPortfolioPage() {
     const phoneNumber = value.replace(/[^\d]/g, '');
     const phoneNumberLength = phoneNumber.length;
 
-    if (phoneNumberLength < 4) return phoneNumber;
-    if (phoneNumberLength < 7) {
-      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
+    if (phoneNumberLength <= 4) return phoneNumber;
+    if (phoneNumberLength <= 7) {
+      return `${phoneNumber.slice(0, 4)} ${phoneNumber.slice(4)}`;
     }
-    return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
+    return `${phoneNumber.slice(0, 4)} ${phoneNumber.slice(4, 7)} ${phoneNumber.slice(7, 11)}`;
   }
 
   // Fetch initial portfolio data
@@ -241,8 +250,62 @@ export default function EditPortfolioPage() {
             fullName: "", email: "", phone: "", address: "", 
             summary: "", linkedinUrl: "", githubUrl: "", websiteUrl: "" 
           },
-          employmentHistory: parsedData.employmentHistory || [],
-          educationalBackground: parsedData.educationalBackground || [],
+          employmentHistory: parsedData.employmentHistory?.map((emp: any) => {
+            let finalStartDate = '';
+            let finalEndDate = '';
+
+            if (emp.startDate) {
+              const startStr = emp.startDate.toString();
+              if (/^\d{4}/.test(startStr)) {
+                finalStartDate = startStr.substring(0, 4);
+              } else if (startStr.length > 4 && startStr.includes('-')) { // YYYY-MM to YYYY
+                finalStartDate = startStr.split('-')[0];
+              }
+            }
+            if (emp.endDate) {
+              const endDateStr = emp.endDate.toString().toLowerCase();
+              if (endDateStr === 'present') {
+                finalEndDate = 'Present';
+              } else if (/^\d{4}/.test(endDateStr)) {
+                finalEndDate = endDateStr.substring(0, 4);
+              } else if (endDateStr.length > 4 && endDateStr.includes('-')) { // YYYY-MM to YYYY
+                finalEndDate = endDateStr.split('-')[0];
+              }
+            }
+            return {
+                ...emp,
+                startDate: finalStartDate,
+                endDate: finalEndDate,
+            };
+          }) || [],
+          educationalBackground: parsedData.educationalBackground?.map((edu: any) => {
+            let finalStartDate = '';
+            let finalEndDate = '';
+
+            if (edu.startDate) {
+              const startStr = edu.startDate.toString();
+              if (/^\d{4}/.test(startStr)) {
+                finalStartDate = startStr.substring(0, 4);
+              } else if (startStr.length > 4 && startStr.includes('-')) { // YYYY-MM to YYYY
+                finalStartDate = startStr.split('-')[0];
+              }
+            }
+            if (edu.endDate) {
+              const endDateStr = edu.endDate.toString().toLowerCase();
+              if (endDateStr === 'present') {
+                finalEndDate = 'Present';
+              } else if (/^\d{4}/.test(endDateStr)) {
+                finalEndDate = endDateStr.substring(0, 4);
+              } else if (endDateStr.length > 4 && endDateStr.includes('-')) { // YYYY-MM to YYYY
+                finalEndDate = endDateStr.split('-')[0];
+              }
+            }
+            return {
+                ...edu,
+                startDate: finalStartDate,
+                endDate: finalEndDate,
+            };
+          }) || [],
           skills: parsedData.skills || [],
           projectShowcases: parsedData.projectShowcases || [],
         });
@@ -585,7 +648,7 @@ export default function EditPortfolioPage() {
                                         render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Start Date</FormLabel>
-                                            <FormControl><Input placeholder="YYYY-MM" {...field} disabled={isSubmittingForm} /></FormControl>
+                                            <FormControl><Input placeholder="YYYY" {...field} value={field.value || ''} disabled={isSubmittingForm} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                         )}
@@ -596,7 +659,7 @@ export default function EditPortfolioPage() {
                                         render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>End Date (or "Present")</FormLabel>
-                                            <FormControl><Input placeholder="YYYY-MM or Present" {...field} disabled={isSubmittingForm} /></FormControl>
+                                            <FormControl><Input placeholder="YYYY or Present" {...field} value={field.value || ''} disabled={isSubmittingForm} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                         )}
@@ -633,7 +696,7 @@ export default function EditPortfolioPage() {
                     <CardHeader>
                         <div className="flex justify-between items-center">
                             <CardTitle className={`text-xl ${primaryTextColor}`}>Educational Background</CardTitle>
-                            <Button type="button" variant="outline" size="sm" onClick={() => appendEducation({ institution: ' ', degree: ' ', fieldOfStudy: ' ', graduationYear: ' ', gpa: ' ' })} disabled={isSubmittingForm} className="gap-1">
+                            <Button type="button" variant="outline" size="sm" onClick={() => appendEducation({ institution: '', degree: '', startDate: '', endDate: '' })} disabled={isSubmittingForm} className="gap-1">
                                 <PlusCircle className="h-4 w-4" /> Add Education
                             </Button>
                         </div>
@@ -654,7 +717,7 @@ export default function EditPortfolioPage() {
                                         render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Institution Name</FormLabel>
-                                            <FormControl><Input placeholder="e.g., University of Example" {...field} disabled={isSubmittingForm} /></FormControl>
+                                            <FormControl><Input placeholder="e.g., University of Example" {...field} value={field.value || ''} disabled={isSubmittingForm} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                         )}
@@ -665,45 +728,34 @@ export default function EditPortfolioPage() {
                                         render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Degree / Qualification</FormLabel>
-                                            <FormControl><Input placeholder="e.g., B.S. in Computer Science" {...field} disabled={isSubmittingForm} /></FormControl>
+                                            <FormControl><Input placeholder="e.g., B.S. in Computer Science" {...field} value={field.value || ''} disabled={isSubmittingForm} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                         )}
                                     />
                                      <FormField
                                         control={form.control}
-                                        name={`educationalBackground.${index}.fieldOfStudy`}
+                                        name={`educationalBackground.${index}.startDate`}
                                         render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Field of Study (Optional)</FormLabel>
-                                            <FormControl><Input placeholder="e.g., Software Engineering" {...field} disabled={isSubmittingForm} /></FormControl>
+                                            <FormLabel>Start Date</FormLabel>
+                                            <FormControl><Input placeholder="YYYY" {...field} value={field.value || ''} disabled={isSubmittingForm} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                         )}
                                     />
                                     <FormField
                                         control={form.control}
-                                        name={`educationalBackground.${index}.graduationYear`}
+                                        name={`educationalBackground.${index}.endDate`}
                                         render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Graduation Year (Optional)</FormLabel>
-                                            <FormControl><Input placeholder="YYYY" {...field} disabled={isSubmittingForm} /></FormControl>
+                                            <FormLabel>End Date (or "Present")</FormLabel>
+                                            <FormControl><Input placeholder="YYYY or Present" {...field} value={field.value || ''} disabled={isSubmittingForm} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                         )}
                                     />
                                 </div>
-                                <FormField
-                                    control={form.control}
-                                    name={`educationalBackground.${index}.gpa`}
-                                    render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>GPA / Grade (Optional)</FormLabel>
-                                        <FormControl><Input placeholder="e.g., 3.8/4.0 or A+" {...field} disabled={isSubmittingForm} /></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                    )}
-                                />
                                 <Button 
                                     type="button" 
                                     variant="ghost" 

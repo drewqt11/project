@@ -179,15 +179,15 @@ export default function SelectPortfolioForPdfPage() {
     );
   } else if (portfolios.length === 0) {
     content = (
-      <div className="text-center py-12 flex flex-col items-center justify-center bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700/80">
+      <div className="text-center py-12 flex flex-col items-center justify-center">
         <FolderOpen className={`h-24 w-24 ${accentColor} mb-6`} />
         <h2 className={`text-2xl font-semibold ${primaryTextColor} mb-3`}>No Portfolios Found</h2>
         <p className={`${secondaryTextColor} max-w-md mb-8`}>
           You haven\'t created any portfolios yet. Create one from your dashboard to generate a PDF.
         </p>
-        <Link href="/dashboard" passHref>
+        <Link href="/portfolios/create" passHref>
           <Button className="bg-gradient-to-r from-[#6e0e0e] to-[#c89b3c] hover:from-[#800000] hover:to-[#d8ab4c] text-white shadow-md hover:shadow-lg transition-all group">
-            Go to Dashboard
+            Create a Portfolio NOW!
           </Button>
         </Link>
       </div>
