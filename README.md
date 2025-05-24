@@ -1,129 +1,347 @@
 # FolioFlow
 
-1\. Introduction
+> A modern, full-stack web application for creating professional PDF portfolios with ease
 
-FolioFlow is a web-based application designed to simplify the process of creating professional PDF portfolios. The application guides users through a step-by-step process to input essential components such as personal information, employment history, educational background, skills, and project showcases. The system will provide various professionally designed templates and allow some customization options to align with users' personal branding.
+<div align="center">
+  <img src="./folioflow_banner.png" alt="FolioFlow Banner" width="100%" style="max-width: 800px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
+</div>
 
-2\. Purpose
+<div align="center">
 
-The purpose of this document is to outline the requirements for the FolioFlow application, ensuring that all stakeholders have a clear understanding of the project's scope, functionalities, and constraints. This SRS will serve as a reference for the development team, project managers, and quality assurance teams throughout the project lifecycle.
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.5-brightgreen?style=for-the-badge&logo=spring)](https://spring.io/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript)](https://typescriptlang.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-12+-blue?style=for-the-badge&logo=postgresql)](https://postgresql.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
 
-3\. Table of Contents
+</div>
 
-1. Introduction
-2. Purpose
-3. Product/Project Scope
-4. Product/Project Value
-5. Intended Audience
-6. Intended Use
-7. Operating Environment
-8. Assumptions and Dependencies
-9. Functional Requirements
-10. Non-Functional Requirements
-11. External Interface Requirements
-12. Design and Implementation Constraints
-13. Testing and Validation
-14. Conclusion
+## Overview
 
-4\. Product/Project Scope
+**FolioFlow** is a sophisticated web-based application that revolutionizes the way professionals create and manage their portfolios. Built with modern technologies, it provides a streamlined, step-by-step process to help users craft visually appealing PDF portfolios that showcase their skills, experience, and projects effectively.
 
-The scope of the FolioFlow project includes:
+### ✨ Key Features
 
-- Development of core input forms for all key portfolio sections.
-- Creation of at least three distinct, professionally designed PDF templates.
-- Implementation of automatic PDF generation functionality.
-- Initial customization options limited to color selection.
-- User account management for saving and managing multiple portfolio drafts.
+- **🔐 Secure Authentication**: Sign up/sign in with email or Google OAuth2
+- **📝 Guided Portfolio Creation**: Step-by-step form-based portfolio building
+- **💾 Data Persistence**: Save and manage multiple portfolio drafts
+- **📱 Responsive Design**: Mobile-first, responsive UI built with Tailwind CSS
+- **🎨 Modern Interface**: Clean, professional UI using Shadcn/UI components
+- **📄 PDF Generation**: Export portfolios as professionally formatted PDF documents
+- **⚡ Real-time Updates**: Instant saving and loading of portfolio data
+- **🌙 Theme Support**: Light/dark mode toggle for user preference
 
-5\. Product/Project Value
+## Technology Stack
 
-FolioFlow addresses the need for an efficient and user-friendly way to create high-quality portfolios, improving the user experience for individuals across various professional fields. The application will save users time and effort while ensuring that their portfolios are visually appealing and professionally formatted.
+### Frontend
+- **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
+- **Language**: TypeScript
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Components**: [Shadcn/UI](https://ui.shadcn.com/) + [Radix UI](https://www.radix-ui.com/)
+- **Forms**: React Hook Form with Zod validation
+- **State Management**: React Hooks + Client-side caching
+- **Icons**: Lucide React
+- **Notifications**: Sonner
+- **Authentication**: JWT + HTTP-only cookies
 
-6\. Intended Audience
+### Backend
+- **Framework**: [Spring Boot 3.4.5](https://spring.io/projects/spring-boot)
+- **Language**: Java 17
+- **Database**: PostgreSQL
+- **ORM**: Spring Data JPA with Hibernate
+- **Security**: Spring Security 6 + JWT
+- **OAuth2**: Google OAuth2 integration
+- **PDF Generation**: Flying Saucer + OpenPDF
+- **API Documentation**: OpenAPI 3 (Swagger)
+- **Build Tool**: Maven
 
-The primary audience for FolioFlow includes:
+### DevOps & Tools
+- **Database**: PostgreSQL
+- **API Testing**: OpenAPI/Swagger UI
+- **Code Quality**: ESLint, TypeScript strict mode
+- **Package Management**: npm (frontend), Maven (backend)
 
-- Job seekers looking to create professional portfolios.
-- Freelancers wanting to showcase their work.
-- Students preparing for internships or job applications.
+## Architecture
 
-7\. Intended Use
+FolioFlow follows a modern full-stack architecture with clear separation of concerns:
 
-Users will interact with the FolioFlow application to:
+### System Overview
 
-- Input personal information and employment history.
-- Generate and download PDF portfolios.
+```mermaid
+graph TD
+    A[User Browser] --> B[Next.js Frontend]
+    B --> C[REST API Layer]
+    C --> D[Spring Boot Backend]
+    D --> E[PostgreSQL Database]
+    
+    B --> F[Authentication]
+    F --> G[JWT Tokens]
+    G --> D
+    
+    D --> H[PDF Generation]
+    H --> I[File Storage]
+```
 
-8\. Operating Environment
+### Technology Stack Architecture
 
-The FolioFlow application will operate in a web environment, supporting:
+| Layer | Technology | Purpose | Key Features |
+|-------|------------|---------|--------------|
+| **Frontend** | Next.js 15 + TypeScript | User Interface | • Server/Client Components<br>• App Router<br>• Static Site Generation |
+| **Styling** | Tailwind CSS + Shadcn/UI | Design System | • Responsive Design<br>• Component Library<br>• Theme Support |
+| **State** | React Hooks + Forms | State Management | • Form Validation<br>• Real-time Updates<br>• Client Caching |
+| **Backend** | Spring Boot 3.4.5 | Business Logic | • RESTful APIs<br>• Security Layer<br>• Data Processing |
+| **Security** | Spring Security + JWT | Authentication | • OAuth2 Integration<br>• Token Management<br>• Role-based Access |
+| **Database** | PostgreSQL + JPA | Data Persistence | • ACID Compliance<br>• JSON Storage<br>• Relationships |
+| **PDF Engine** | Flying Saucer + OpenPDF | Document Generation | • HTML to PDF<br>• Template Engine<br>• Custom Styling |
 
-- Major web browsers.
+### Component Architecture
 
-9\. Assumptions and Dependencies
+#### Frontend Components
+```
+frontend-web/
+├── 📁 app/                    # Next.js App Router
+│   ├── 🏠 page.tsx           # Landing page
+│   ├── 🔐 auth/              # Authentication pages
+│   ├── 📊 dashboard/         # User dashboard
+│   ├── 📄 portfolios/        # Portfolio management
+│   └── 👤 profile/           # User profile
+├── 📁 components/            # Reusable UI components
+│   ├── 🎨 ui/                # Shadcn/UI components
+│   └── 🧩 custom/            # Custom components
+└── 📁 lib/                   # Utilities & configurations
+```
 
-- The application will rely on third-party libraries for PDF generation.
-- Users will have internet access to utilize the web application.
+#### Backend Structure
+```
+backend/website/
+├── 📁 controllers/           # REST API endpoints
+│   ├── AuthController        # Authentication APIs
+│   ├── PortfolioController   # Portfolio CRUD APIs
+│   └── PdfController         # PDF generation APIs
+├── 📁 entities/              # JPA entities
+│   ├── UserEntity           # User data model
+│   ├── PortfolioEntity      # Portfolio data model
+│   └── RefreshToken         # Token management
+├── 📁 services/              # Business logic
+├── 📁 repositories/          # Data access layer
+├── 📁 security/              # Security configurations
+└── 📁 utilities/             # Helper classes
+```
 
-10\. Functional Requirements
+### Data Flow Architecture
 
-| ID  | Description |
-| --- | --- |
-| FR1 | Users must be able to create an account and log in (via Google also Oauth). |
-| FR2 | Users must be able to input personal information, employment history, and educational background. |
-| FR3 | Users must be able to generate and download PDF portfolios(with my own template design). |
+| Step | Component | Action | Data Format |
+|------|-----------|--------|-------------|
+| 1 | **User Interface** | User interaction | Form Input |
+| 2 | **React Forms** | Validation & submission | JSON |
+| 3 | **API Layer** | HTTP request to backend | REST/JSON |
+| 4 | **Spring Controller** | Route to service | Java Objects |
+| 5 | **Service Layer** | Business logic processing | DTOs |
+| 6 | **Repository Layer** | Database operations | JPA Entities |
+| 7 | **PostgreSQL** | Data persistence | Relational Data |
+| 8 | **PDF Generator** | Document creation | Binary PDF |
 
-11\. Non-Functional Requirements
+### Security Architecture
 
-- Performance: The application should load within 3 seconds on a standard broadband connection.
-- Scalability: The system should support up to 10,000 concurrent users.
-- Security: User data must be encrypted during transmission and storage.
-- Usability: The application should be intuitive and easy to navigate for users of all technical levels.
+| Layer | Implementation | Features |
+|-------|----------------|----------|
+| **Frontend Security** | • HTTP-only cookies<br>• CSRF protection<br>• Input validation | • Secure token storage<br>• XSS prevention<br>• Client-side validation |
+| **API Security** | • JWT authentication<br>• CORS configuration<br>• Rate limiting | • Stateless authentication<br>• Cross-origin control<br>• Request throttling |
+| **Backend Security** | • Spring Security<br>• OAuth2 integration<br>• Password hashing | • Role-based access<br>• Social login<br>• BCrypt encryption |
+| **Database Security** | • Connection pooling<br>• SQL injection prevention<br>• Data encryption | • Prepared statements<br>• Parameterized queries<br>• Encrypted storage |
 
-12\. External Interface Requirements
+### Performance Architecture
 
-- User Interfaces: The application will feature a web-based interface with forms for data entry and a dashboard for managing portfolios.
-- APIs: Integration with third-party services for PDF generation and future cloud storage options.
+| Optimization | Technology | Impact |
+|--------------|------------|---------|
+| **Frontend** | • Next.js SSR/SSG<br>• Image optimization<br>• Code splitting | • Faster initial load<br>• Optimized assets<br>• Reduced bundle size |
+| **Caching** | • Browser caching<br>• API response caching<br>• Static asset CDN | • Reduced server load<br>• Faster responses<br>• Global distribution |
+| **Backend** | • Connection pooling<br>• Lazy loading<br>• Query optimization | • Efficient DB connections<br>• On-demand data loading<br>• Faster queries |
+| **Database** | • Indexed columns<br>• Query optimization<br>• Connection pooling | • Fast lookups<br>• Efficient joins<br>• Resource management |
 
-13\. Design and Implementation Constraints
+## Core Features Deep Dive
 
-- The application must be developed using modern web technologies (e.g., HTML5, CSS3, JavaScript).
-- Compliance with data protection regulations (e.g., GDPR) is mandatory.
+### 1. User Management
+- **Account Creation**: Email/password registration with validation
+- **Google OAuth2**: One-click sign-in with Google accounts
+- **JWT Authentication**: Secure token-based authentication
+- **Session Management**: Automatic token refresh and secure logout
 
-14\. Testing and Validation
+### 2. Portfolio Management
+- **Create Multiple Portfolios**: Users can maintain several portfolio drafts
+- **Structured Data Input**: Organized sections for:
+  - Personal Information (name, contact, bio)
+  - Employment History (positions, companies, descriptions)
+  - Educational Background (degrees, institutions, achievements)
+  - Skills (technical and soft skills with proficiency levels)
+  - Project Showcases (descriptions, technologies, links)
 
-Testing will include:
+### 3. PDF Generation
+- **Professional Templates**: Custom-designed PDF layouts
+- **Dynamic Content**: Real-time rendering of user data
+- **Download Ready**: High-quality PDF output optimized for printing
 
-- Unit testing for individual components.
-- Integration testing to ensure components work together.
-- User Acceptance Testing (UAT) to validate usability and functionality with real users.
+### 4. User Interface
+- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
+- **Accessibility**: WCAG compliant with keyboard navigation support
+- **Modern UX**: Intuitive navigation with progress indicators
+- **Real-time Feedback**: Instant validation and error handling
 
-15\. Conclusion
+## Getting Started
 
-This SRS outlines the core functionalities, scope, and requirements for the successful development of the FolioFlow application. It serves as a foundation for design and development decisions, ensuring alignment among all stakeholders.
+### Prerequisites
+- Node.js 18+ and npm
+- Java 17+
+- Maven 3.6+
+- PostgreSQL 12+
 
-Extra:  
-<br/>**Product Perspective for FolioFlow**
+### Frontend Setup
 
-FolioFlow is a specialized, self-contained web-based software product designed to streamline and simplify the creation of professional PDF portfolios. It guides users through a structured process to input and organize key information, serving individuals looking to present their qualifications and work in a polished format. While it operates as an independent product, it utilizes third-party services for functionalities like PDF generation and is designed with future integration capabilities for cloud storage through APIs. The system is built to enhance the user's ability to quickly produce high-quality, visually appealing portfolios, improving efficiency for job seekers, freelancers, and students.  
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd project/frontend-web
+   ```
 
-The system includes functionalities for:
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-- **User Account Management**: Secure creation and management of user accounts for creating, saving, and managing multiple portfolio drafts.  
-- **Portfolio Content Creation**: Step-by-step input of essential portfolio components such as personal information, employment history, educational background, skills, and project showcases.  
-- **PDF Portfolio Generation**: Automatic generation and downloading of the completed portfolio in PDF format, based on user inputs and template selection.  
+3. **Set up environment variables**
+   ```bash
+   # Create .env.local file
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   ```
 
-The major components and interfaces of the system include:
+4. **Start development server**
+   ```bash
+   npm run dev
+   ```
 
-- **FolioFlow Web Application Platform**: The central system for user data input, portfolio assembly, template interaction, user account management, and PDF generation.  
-  - **User Account Management**
-    - Users can create an account and log in (including options like Google OAuth).  
-    - Users can manage their saved portfolio drafts.  
-  - **Portfolio Data Input Module**
-    - Users can input personal information.  
-    - Users can input employment history.  
-    - Users can input educational background.  
-    - Users can input skills and project showcase.  
-  - **PDF Generation Module**
-    - Users can generate their portfolio as a PDF document(My own design they cannot select a template).  
-    - Users can download the generated PDF portfolio.
+   Frontend will be available at `http://localhost:3000`
+
+### Backend Setup
+
+1. **Navigate to backend directory**
+   ```bash
+   cd project/backend/website
+   ```
+
+2. **Configure database**
+   ```bash
+   # Create PostgreSQL database
+   createdb folioflow_db
+   
+   # Update application.properties with your database credentials
+   ```
+
+3. **Set up environment variables**
+   ```properties
+   # src/main/resources/application.properties
+   spring.datasource.url=jdbc:postgresql://localhost:5432/folioflow_db
+   spring.datasource.username=your_username
+   spring.datasource.password=your_password
+   
+   # JWT Configuration
+   app.jwt.secret=your-secret-key
+   app.jwt.expiration=86400000
+   
+   # Google OAuth2
+   spring.security.oauth2.client.registration.google.client-id=your-google-client-id
+   spring.security.oauth2.client.registration.google.client-secret=your-google-client-secret
+   ```
+
+4. **Build and run**
+   ```bash
+   mvn clean install
+   mvn spring-boot:run
+   ```
+
+   Backend API will be available at `http://localhost:8080`
+
+### Database Schema
+
+The application uses the following main entities:
+
+- **Users**: Store user account information and authentication data
+- **Portfolios**: Store portfolio metadata and JSON content
+- **Refresh Tokens**: Manage JWT refresh token lifecycle
+- **Generated PDFs**: Track PDF generation history
+
+## Application Flow
+
+1. **Landing Page**: Users discover FolioFlow features and benefits
+2. **Authentication**: Sign up/sign in via email or Google OAuth2
+3. **Dashboard**: Overview of existing portfolios with creation options
+4. **Portfolio Creation**: Step-by-step guided process through forms
+5. **Portfolio Editing**: Modify and update existing portfolio content
+6. **PDF Generation**: Export completed portfolios as PDF documents
+7. **Portfolio Management**: View, edit, duplicate, or delete portfolios
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/signup` - Register new user
+- `POST /api/auth/signin` - User login
+- `POST /api/auth/logout` - User logout
+- `POST /api/auth/refresh` - Refresh JWT token
+
+### Portfolio Management
+- `GET /api/users/{userId}/portfolios` - Get user portfolios
+- `POST /api/users/{userId}/portfolios` - Create new portfolio
+- `GET /api/portfolios/{portfolioId}` - Get portfolio details
+- `PUT /api/portfolios/{portfolioId}` - Update portfolio
+- `DELETE /api/portfolios/{portfolioId}` - Delete portfolio
+
+### PDF Management
+- `POST /api/portfolios/{portfolioId}/generate-pdf` - Generate portfolio PDF
+- `GET /api/portfolios/{portfolioId}/download-pdf/{filename}` - Download generated PDF
+- `GET /api/users/{userId}/generated-pdfs` - List all generated PDFs for user
+- `DELETE /api/portfolios/{portfolioId}/generated-pdfs/{filename}` - Delete specific PDF
+
+### API Documentation
+- [`GET /swagger-ui/index.html`](http://localhost:8080/swagger-ui/index.html#/Portfolio%20Management) - Interactive API documentation
+
+> **Note**: If PDF endpoints don't appear in Swagger UI, ensure the `PdfController` is properly component-scanned and the application is restarted.
+
+## Future Enhancements
+
+- **Template Selection**: Multiple PDF template options
+- **Cloud Storage**: Integration with cloud storage providers
+- **Portfolio Sharing**: Public portfolio URLs
+- **Analytics**: Portfolio view tracking and insights
+- **Export Options**: Additional export formats (Word, HTML)
+- **Collaboration**: Team portfolio creation features
+- **AI Integration**: AI-powered content suggestions
+
+## Contributing
+
+We welcome contributions! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Author
+
+**Andri Apas**
+- GitHub: [@drewqt11](https://github.com/drewqt11?tab=repositories)
+- Email: andriapas4@gmail.com
+
+## Acknowledgments
+
+- [Shadcn/UI](https://ui.shadcn.com/) for the amazing component library
+- [Lucide](https://lucide.dev/) for the beautiful icons
+- [Tailwind CSS](https://tailwindcss.com/) for the utility-first CSS framework
+- [Spring Boot](https://spring.io/projects/spring-boot) for the robust backend framework
+- [Next.js](https://nextjs.org/) for the powerful React framework
+
+---
