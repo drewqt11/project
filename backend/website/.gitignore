@@ -39,11 +39,12 @@ build/
 .env.development
 .env.test
 .env.production
-application.properties
 application-local.properties
 application-dev.properties
 application-prod.properties
 *.properties.local
+
+# Note: application.properties is tracked but uses git skip-worktree
 
 ### Logs ###
 logs/
@@ -61,6 +62,11 @@ Thumbs.db
 ### Temporary Files ###
 *.tmp
 *.temp
-*.swp
-*.swo
 *~
+
+### Maven ###
+.mvn/wrapper/maven-wrapper.properties
+
+### Application specific ###
+uploads/
+generated-pdfs/
