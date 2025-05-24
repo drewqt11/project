@@ -5,6 +5,7 @@
 .env.development
 .env.test
 .env.production
+backend/website/src/main/resources/application.properties
 
 # IDE Files
 .idea/
