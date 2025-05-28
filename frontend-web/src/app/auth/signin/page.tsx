@@ -10,6 +10,7 @@ import * as z from "zod";
 import { Eye, EyeOff, ArrowLeft, Users } from "lucide-react";
 import { toast } from "sonner";
 import Cookies from "js-cookie";
+import { validateToken } from "@/lib/auth";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,16 +66,20 @@ export default function SignInPage() {
   const [isLoadingAuth, setIsLoadingAuth] = React.useState(true);
 
   React.useEffect(() => {
-    if (typeof window !== "undefined") {
-      const token = Cookies.get("token");
-      if (token) {
-        router.push("/dashboard");
+    async function checkAuth() {
+      if (typeof window !== "undefined") {
+        const { isValid } = await validateToken();
+        if (isValid) {
+          router.push("/dashboard");
+        } else {
+          setIsLoadingAuth(false);
+        }
       } else {
         setIsLoadingAuth(false);
       }
-    } else {
-      setIsLoadingAuth(false);
     }
+    
+    checkAuth();
   }, [router]);
 
   const form = useForm<SignInFormValues>({

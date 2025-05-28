@@ -42,6 +42,7 @@ export async function POST(request: Request) {
       email: backendResult.email,
       firstName: backendResult.firstName,
       lastName: backendResult.lastName,
+      isOAuth2User: backendResult.isOAuth2User,
       // Include other fields from backendResult if needed by the frontend in the future
       // For example, if 'type' is needed: type: backendResult.type
     };

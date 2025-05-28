@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ArrowRight, Palette, ShieldCheck, ListChecks } from "lucide-react";
 import Image from "next/image";
-import Cookies from "js-cookie";
+import { validateToken } from "@/lib/auth";
 
 const featureDetails = [
   {
@@ -38,16 +38,20 @@ export default function LandingPage() {
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const token = Cookies.get("token");
-      if (token) {
-        router.push("/dashboard");
+    async function checkAuth() {
+      if (typeof window !== "undefined") {
+        const { isValid } = await validateToken();
+        if (isValid) {
+          router.push("/dashboard");
+        } else {
+          setIsLoadingAuth(false);
+        }
       } else {
         setIsLoadingAuth(false);
       }
-    } else {
-      setIsLoadingAuth(false);
     }
+    
+    checkAuth();
   }, [router]);
 
   if (isLoadingAuth) {

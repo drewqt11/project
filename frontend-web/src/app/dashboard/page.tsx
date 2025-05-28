@@ -59,6 +59,7 @@ import {
 } from "@/components/ui/chart"; // Assuming chart.tsx is in ui
 import { Skeleton } from "@/components/ui/skeleton";
 import Cookies from "js-cookie";
+import { validateToken, getUserFromCookies, clearAuthCookies, type UserProfile } from "@/lib/auth";
 
 // Sample data for portfolios - replace with actual data fetching
 // const portfolios = [
@@ -88,15 +89,6 @@ import Cookies from "js-cookie";
 //   },
 // ];
 
-// Add UserProfile interface
-interface UserProfile {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  avatarUrl?: string;
-}
-
 // Interface for individual portfolio summary (adjust as per your API response)
 interface PortfolioSummary {
   portfolioId: string;
@@ -107,18 +99,18 @@ interface PortfolioSummary {
 }
 
 // Function to safely get item from localStorage
-function getCookieItem(key: string) {
-  if (typeof window !== "undefined") {
-    const item = Cookies.get(key);
-    try {
-      return item ? JSON.parse(item) : null;
-    } catch (e) {
-      // If parsing fails, return the raw item (it might not be JSON)
-      return item || null;
-    }
-  }
-  return null;
-}
+// function getCookieItem(key: string) {
+//   if (typeof window !== "undefined") {
+//     const item = Cookies.get(key);
+//     try {
+//       return item ? JSON.parse(item) : null;
+//     } catch (e) {
+//       // If parsing fails, return the raw item (it might not be JSON)
+//       return item || null;
+//     }
+//   }
+//   return null;
+// }
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -393,25 +385,28 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    setIsLoadingAuth(true); // Start auth loading
-    const token = Cookies.get("token");
-    const storedUser = getCookieItem("user") as UserProfile | null;
+    async function checkAuth() {
+      setIsLoadingAuth(true);
+      const { isValid, user } = await validateToken();
 
-    if (!token || !storedUser?.id) {
-      router.push("/auth/signin");
-      setIsLoadingAuth(false); // Stop auth loading if redirecting
-      return;
+      if (!isValid || !user) {
+        router.push("/auth/signin");
+        setIsLoadingAuth(false);
+        return;
+      }
+      
+      setIsAuthenticated(true);
+      setUserProfile(user);
+      setIsLoadingAuth(false);
+
+      const timer = setInterval(() => {
+        setCurrentTime(new Date());
+      }, 1000);
+
+      return () => clearInterval(timer);
     }
-    
-    setIsAuthenticated(true);
-    setUserProfile(storedUser);
-    setIsLoadingAuth(false); // Stop auth loading after setting user
 
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
+    checkAuth();
   }, [router]);
 
   // New useEffect to fetch all portfolios when userProfile is available

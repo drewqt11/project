@@ -25,6 +25,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { validateToken } from "@/lib/auth";
 
 // Re-using the Google Icon from sign-in or a shared components directory
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -73,16 +74,20 @@ export default function SignUpPage() {
   const [isLoadingAuth, setIsLoadingAuth] = React.useState(true);
 
   React.useEffect(() => {
-    if (typeof window !== "undefined") {
-      const token = Cookies.get("token");
-      if (token) {
-        router.push("/dashboard");
+    async function checkAuth() {
+      if (typeof window !== "undefined") {
+        const { isValid } = await validateToken();
+        if (isValid) {
+          router.push("/dashboard");
+        } else {
+          setIsLoadingAuth(false);
+        }
       } else {
         setIsLoadingAuth(false);
       }
-    } else {
-      setIsLoadingAuth(false);
     }
+    
+    checkAuth();
   }, [router]);
 
   const form = useForm<SignUpFormValues>({
